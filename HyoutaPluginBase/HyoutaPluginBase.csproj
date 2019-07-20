@@ -42,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DuplicatableStream.cs" />
+    <Compile Include="FileContainer\IContainer.cs" />
+    <Compile Include="FileContainer\IFile.cs" />
+    <Compile Include="FileContainer\INode.cs" />
     <Compile Include="IDecompressor.cs" />
     <Compile Include="IProgram.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
