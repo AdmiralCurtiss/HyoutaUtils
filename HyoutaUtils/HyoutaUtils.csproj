@@ -48,6 +48,9 @@
     <Compile Include="HexUtils.cs" />
     <Compile Include="NumberUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Streams\DuplicatableByteArrayStream.cs" />
+    <Compile Include="Streams\DuplicatableFileStream.cs" />
+    <Compile Include="Streams\PartialStream.cs" />
     <Compile Include="StreamUtils.cs" />
     <Compile Include="TextUtils.cs" />
     <Compile Include="TimeUtils.cs" />
