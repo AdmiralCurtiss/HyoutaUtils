@@ -26,6 +26,15 @@ namespace HyoutaUtils {
 				  ( x >> 8 ) );
 		}
 
+		public static int SwapEndian24( this int x ) {
+			return (int)SwapEndian24( (uint)x );
+		}
+		public static uint SwapEndian24( this uint x ) {
+			return ( ( x & 0x000000FF ) << 16 ) |
+				   ( ( x & 0x0000FF00 ) ) |
+				   ( ( x & 0x00FF0000 ) >> 16 );
+		}
+
 		public static int SwapEndian( this int x ) {
 			return (int)SwapEndian( (uint)x );
 		}
