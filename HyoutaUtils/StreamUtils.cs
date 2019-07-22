@@ -238,7 +238,14 @@ namespace HyoutaUtils {
 			s.Position = s.Position + count;
 		}
 
+		public static byte[] ReadBytes( this Stream stream, long count ) {
+			byte[] sd = new byte[count];
+			stream.Read( sd, 0, sd.Length );
+			return sd;
+		}
+
 		public static byte[] ReadUInt8Array( this Stream s, long count ) {
+			// TODO: Isn't this just the same as ReadBytes() except slower?
 			byte[] data = new byte[count];
 			for ( long i = 0; i < count; ++i ) {
 				data[i] = s.ReadUInt8();
@@ -393,6 +400,13 @@ namespace HyoutaUtils {
 			}
 		}
 
+		public static string ReadUTF8NulltermFromLocationAndReset( this Stream s, long location ) {
+			long pos = s.Position;
+			s.Position = location;
+			string str = s.ReadUTF8Nullterm();
+			s.Position = pos;
+			return str;
+		}
 		public static string ReadUTF8Nullterm( this Stream s ) {
 			List<byte> data = new List<byte>();
 			int b = s.ReadByte();
@@ -423,6 +437,10 @@ namespace HyoutaUtils {
 				b0 = s.ReadByte(); b1 = s.ReadByte();
 			}
 			return sb.ToString();
+		}
+
+		public static string ReadShiftJis( this Stream s, long bytecount ) {
+			return s.ReadSizedString( bytecount, TextUtils.GameTextEncoding.ShiftJIS );
 		}
 
 		public static string ReadShiftJisNullterm( this Stream s ) {
