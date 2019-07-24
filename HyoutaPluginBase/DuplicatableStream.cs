@@ -16,6 +16,8 @@ namespace HyoutaPluginBase {
 
 		// signify that we're done with accessing the data for now
 		// it should be possible to call ReStart() again later to reopen the stream
+		// even if ReStart() is not called, the next access should implicitly
+		// start from the beginning of the stream after a call to End()
 		public abstract void End();
 	}
 }

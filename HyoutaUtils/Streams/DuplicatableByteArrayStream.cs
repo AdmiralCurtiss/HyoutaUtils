@@ -33,7 +33,7 @@ namespace HyoutaUtils.Streams {
 		}
 
 		public override void End() {
-			// nothing to do here, we consume no resources except memory and we need to keep that for ReStart()
+			CurrentPosition = 0;
 		}
 
 		public override void Flush() {
