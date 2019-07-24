@@ -48,6 +48,7 @@
     <Compile Include="HexUtils.cs" />
     <Compile Include="NumberUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Streams\ConcatenatedStream.cs" />
     <Compile Include="Streams\DuplicatableByteArrayStream.cs" />
     <Compile Include="Streams\DuplicatableFileStream.cs" />
     <Compile Include="Streams\ConstantStream.cs" />
