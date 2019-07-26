@@ -58,5 +58,9 @@ namespace HyoutaUtils.Streams {
 
 		public override void End() {
 		}
+
+		public override string ToString() {
+			return "Empty stream";
+		}
 	}
 }

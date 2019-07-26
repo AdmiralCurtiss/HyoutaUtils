@@ -191,5 +191,18 @@ namespace HyoutaUtils.Streams {
 			CurrentStream.End();
 			CurrentStreamIndex = 0;
 		}
+
+		public override string ToString() {
+			StringBuilder sb = new StringBuilder();
+			sb.Append( "Chain of " ).Append( Streams.Count ).Append( " streams { " );
+			for ( int i = 0; i < Streams.Count; ++i ) {
+				if ( i != 0 ) {
+					sb.Append( ", " );
+				}
+				sb.Append( Streams[i].ToString() );
+			}
+			sb.Append( " }" );
+			return sb.ToString();
+		}
 	}
 }

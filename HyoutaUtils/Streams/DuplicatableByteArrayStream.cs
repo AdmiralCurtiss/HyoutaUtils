@@ -91,5 +91,9 @@ namespace HyoutaUtils.Streams {
 		protected override void Dispose( bool disposing ) {
 			Data = null;
 		}
+
+		public override string ToString() {
+			return "Byte array stream (0x" + Data.LongLength.ToString( "X" ) + " bytes)";
+		}
 	}
 }

@@ -87,5 +87,9 @@ namespace HyoutaUtils.Streams {
 		public override void End() {
 			InternalPosition = 0;
 		}
+
+		public override string ToString() {
+			return "Constant stream of value 0x" + InternalConstant.ToString( "X2" ) + " (0x" + InternalSize.ToString( "X" ) + " bytes)";
+		}
 	}
 }
