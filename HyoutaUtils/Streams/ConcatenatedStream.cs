@@ -58,6 +58,10 @@ namespace HyoutaUtils.Streams {
 				return EmptyStream.Instance;
 			}
 
+			if ( Streams.Count == 1 ) {
+				return Streams[0];
+			}
+
 			return new ConcatenatedStream( Streams, Offsets, InternalCanRead, InternalCanSeek, InternalCanWrite );
 		}
 
