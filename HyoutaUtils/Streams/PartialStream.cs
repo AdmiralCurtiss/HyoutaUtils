@@ -27,11 +27,21 @@ namespace HyoutaUtils.Streams {
 			if ( position < 0 ) { throw new Exception( "Invalid position, must be positive." ); }
 			if ( length < 0 ) { throw new Exception( "Invalid length, must be positive." ); }
 
-			BaseStreamInternal = stream.Duplicate();
-			Initialized = false;
-			PartialStart = position;
-			PartialLength = length;
-			CurrentPosition = 0;
+			if ( stream is PartialStream ) {
+				// optimization to better chain partial stream of partial stream
+				PartialStream parent = stream as PartialStream;
+				BaseStreamInternal = parent.BaseStreamInternal.Duplicate();
+				Initialized = false;
+				PartialStart = parent.PartialStart + position;
+				PartialLength = length;
+				CurrentPosition = 0;
+			} else {
+				BaseStreamInternal = stream.Duplicate();
+				Initialized = false;
+				PartialStart = position;
+				PartialLength = length;
+				CurrentPosition = 0;
+			}
 		}
 
 		public override bool CanRead => BaseStream.CanRead;
