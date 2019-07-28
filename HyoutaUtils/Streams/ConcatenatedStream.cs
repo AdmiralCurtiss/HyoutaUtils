@@ -123,8 +123,8 @@ namespace HyoutaUtils.Streams {
 				return 0;
 			}
 
-			int bytesLeftInCurrentStream = (int)( CurrentStream.Length - CurrentStream.Position );
-			int bytesToReadFromCurrentStream = Math.Min( count, bytesLeftInCurrentStream );
+			long bytesLeftInCurrentStream = CurrentStream.Length - CurrentStream.Position;
+			int bytesToReadFromCurrentStream = (int)Math.Min( (long)count, bytesLeftInCurrentStream );
 			int bytesToReadFromNextStream = count - bytesToReadFromCurrentStream;
 			int bytesRead = CurrentStream.Read( buffer, offset, bytesToReadFromCurrentStream );
 			if ( bytesLeftInCurrentStream == bytesRead ) {
@@ -162,8 +162,8 @@ namespace HyoutaUtils.Streams {
 				return;
 			}
 
-			int bytesLeftInCurrentStream = (int)( CurrentStream.Length - CurrentStream.Position );
-			int bytesToWriteToCurrentStream = Math.Min( count, bytesLeftInCurrentStream );
+			long bytesLeftInCurrentStream = CurrentStream.Length - CurrentStream.Position;
+			int bytesToWriteToCurrentStream = (int)Math.Min( (long)count, bytesLeftInCurrentStream );
 			int bytesToWriteToNextStream = count - bytesToWriteToCurrentStream;
 			CurrentStream.Write( buffer, offset, bytesToWriteToCurrentStream );
 			if ( bytesLeftInCurrentStream == bytesToWriteToCurrentStream ) {
