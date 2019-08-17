@@ -353,8 +353,14 @@ namespace HyoutaUtils {
 
 		public static void WriteNulltermString( this Stream s, string str, TextUtils.GameTextEncoding encoding ) {
 			switch ( encoding ) {
+				case TextUtils.GameTextEncoding.ASCII:
+					WriteAsciiNullterm( s, str ); return;
+				case TextUtils.GameTextEncoding.ShiftJIS:
+					WriteShiftJisNullterm( s, str ); return;
 				case TextUtils.GameTextEncoding.UTF8:
 					WriteUTF8Nullterm( s, str ); return;
+				case TextUtils.GameTextEncoding.UTF16:
+					WriteUTF16Nullterm( s, str ); return;
 			}
 			throw new Exception( "Writing nullterminated string not implemented for encoding " + encoding.ToString() );
 		}
@@ -423,6 +429,29 @@ namespace HyoutaUtils {
 
 		public static void WriteUTF8Nullterm( this Stream s, string str ) {
 			WriteUTF8( s, str, 0, false );
+			s.WriteByte( 0 );
+		}
+
+		public static void WriteUTF16( this Stream s, string str, int count = 0, bool trim = false ) {
+			WriteString( s, Encoding.Unicode, str, count, trim );
+		}
+
+		public static void WriteUTF16Nullterm( this Stream s, string str ) {
+			WriteUTF16( s, str, 0, false );
+			s.WriteByte( 0 );
+		}
+
+		public static void WriteAsciiNullterm( this Stream s, string str ) {
+			WriteAscii( s, str, 0, false );
+			s.WriteByte( 0 );
+		}
+
+		public static void WriteShiftJis( this Stream s, string str, int count = 0, bool trim = false ) {
+			WriteString( s, TextUtils.ShiftJISEncoding, str, count, trim );
+		}
+
+		public static void WriteShiftJisNullterm( this Stream s, string str ) {
+			WriteShiftJis( s, str, 0, false );
 			s.WriteByte( 0 );
 		}
 
