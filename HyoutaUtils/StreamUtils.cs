@@ -496,5 +496,14 @@ namespace HyoutaUtils {
 		public static void Write( this Stream s, byte[] data ) {
 			s.Write( data, 0, data.Length );
 		}
+
+		public static MemoryStream CopyToMemory( this Stream s ) {
+			long p = s.Position;
+			s.Position = 0;
+			MemoryStream ms = new MemoryStream( (int)s.Length );
+			CopyStream( s, ms, s.Length );
+			s.Position = p;
+			return ms;
+		}
 	}
 }
