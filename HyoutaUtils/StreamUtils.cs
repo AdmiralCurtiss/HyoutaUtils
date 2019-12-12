@@ -503,6 +503,7 @@ namespace HyoutaUtils {
 			MemoryStream ms = new MemoryStream( (int)s.Length );
 			CopyStream( s, ms, s.Length );
 			s.Position = p;
+			ms.Position = p;
 			return ms;
 		}
 	}
