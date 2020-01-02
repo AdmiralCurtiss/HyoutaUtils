@@ -506,5 +506,36 @@ namespace HyoutaUtils {
 			ms.Position = p;
 			return ms;
 		}
+
+		public static MemoryStream CopyToMemoryAndDispose( this Stream s ) {
+			long p = s.Position;
+			if (p != 0) {
+				s.Position = 0;
+			}
+			MemoryStream ms = new MemoryStream( (int)s.Length );
+			CopyStream( s, ms, s.Length );
+			ms.Position = p;
+			s.Dispose();
+			return ms;
+		}
+
+		public static byte[] CopyToByteArray( this Stream s ) {
+			long p = s.Position;
+			s.Position = 0;
+			byte[] data = new byte[s.Length];
+			s.Read(data, 0, (int)s.Length);
+			s.Position = p;
+			return data;
+		}
+
+		public static byte[] CopyToByteArrayAndDispose( this Stream s ) {
+			if (s.Position != 0) {
+				s.Position = 0;
+			}
+			byte[] data = new byte[s.Length];
+			s.Read(data, 0, (int)s.Length);
+			s.Dispose();
+			return data;
+		}
 	}
 }
