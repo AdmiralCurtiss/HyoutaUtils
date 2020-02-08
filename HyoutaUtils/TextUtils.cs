@@ -114,5 +114,120 @@ namespace HyoutaUtils {
 			if ( string.IsNullOrEmpty( value ) ) return value;
 			return value.Length <= maxLength ? value : value.Substring( 0, maxLength );
 		}
+
+		public static char ConvertFullwidthToAscii(this char c) {
+			switch (c) {
+				case '！': return '!';
+				case '＂': return '"';
+				case '＃': return '#';
+				case '＄': return '$';
+				case '％': return '%';
+				case '＆': return '&';
+				case '＇': return '\'';
+				case '（': return '(';
+				case '）': return ')';
+				case '＊': return '*';
+				case '＋': return '+';
+				case '，': return ',';
+				case '－': return '-';
+				case '．': return '.';
+				case '／': return '/';
+				case '０': return '0';
+				case '１': return '1';
+				case '２': return '2';
+				case '３': return '3';
+				case '４': return '4';
+				case '５': return '5';
+				case '６': return '6';
+				case '７': return '7';
+				case '８': return '8';
+				case '９': return '9';
+				case '：': return ':';
+				case '；': return ';';
+				case '＜': return '<';
+				case '＝': return '=';
+				case '＞': return '>';
+				case '？': return '?';
+				case '＠': return '@';
+				case 'Ａ': return 'A';
+				case 'Ｂ': return 'B';
+				case 'Ｃ': return 'C';
+				case 'Ｄ': return 'D';
+				case 'Ｅ': return 'E';
+				case 'Ｆ': return 'F';
+				case 'Ｇ': return 'G';
+				case 'Ｈ': return 'H';
+				case 'Ｉ': return 'I';
+				case 'Ｊ': return 'J';
+				case 'Ｋ': return 'K';
+				case 'Ｌ': return 'L';
+				case 'Ｍ': return 'M';
+				case 'Ｎ': return 'N';
+				case 'Ｏ': return 'O';
+				case 'Ｐ': return 'P';
+				case 'Ｑ': return 'Q';
+				case 'Ｒ': return 'R';
+				case 'Ｓ': return 'S';
+				case 'Ｔ': return 'T';
+				case 'Ｕ': return 'U';
+				case 'Ｖ': return 'V';
+				case 'Ｗ': return 'W';
+				case 'Ｘ': return 'X';
+				case 'Ｙ': return 'Y';
+				case 'Ｚ': return 'Z';
+				case '［': return '[';
+				case '＼': return '\\';
+				case '］': return ']';
+				case '＾': return '^';
+				case '＿': return '_';
+				case '｀': return '`';
+				case 'ａ': return 'a';
+				case 'ｂ': return 'b';
+				case 'ｃ': return 'c';
+				case 'ｄ': return 'd';
+				case 'ｅ': return 'e';
+				case 'ｆ': return 'f';
+				case 'ｇ': return 'g';
+				case 'ｈ': return 'h';
+				case 'ｉ': return 'i';
+				case 'ｊ': return 'j';
+				case 'ｋ': return 'k';
+				case 'ｌ': return 'l';
+				case 'ｍ': return 'm';
+				case 'ｎ': return 'n';
+				case 'ｏ': return 'o';
+				case 'ｐ': return 'p';
+				case 'ｑ': return 'q';
+				case 'ｒ': return 'r';
+				case 'ｓ': return 's';
+				case 'ｔ': return 't';
+				case 'ｕ': return 'u';
+				case 'ｖ': return 'v';
+				case 'ｗ': return 'w';
+				case 'ｘ': return 'x';
+				case 'ｙ': return 'y';
+				case 'ｚ': return 'z';
+				case '｛': return '{';
+				case '｜': return '|';
+				case '｝': return '}';
+				case '～': return '~';
+				case '￠': return '¢';
+				case '￡': return '£';
+				case '￢': return '¬';
+				//case '￣': return '';
+				case '￤': return '¦';
+				case '￥': return '¥';
+				//case '￦': return '';
+				default: return c;
+			}
+		}
+
+		public static string ConvertFullwidthToAscii(this string s) {
+			StringBuilder sb = new StringBuilder(s.Length);
+			foreach (char c in s) {
+				sb.Append(ConvertFullwidthToAscii(c));
+			}
+			return sb.ToString();
+		}
 	}
 }
