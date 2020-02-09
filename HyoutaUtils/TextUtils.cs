@@ -229,5 +229,20 @@ namespace HyoutaUtils {
 			}
 			return sb.ToString();
 		}
+
+		public static string InsertSubstring(this string a, int offseta, string b, int offsetb, int lengthb) {
+			return a.Substring(0, offseta) + b.Substring(offsetb, lengthb) + a.Substring(offseta);
+		}
+
+		public static string ReplaceSubstring(this string a, int offseta, int lengtha, string b, int offsetb, int lengthb) {
+			return a.Substring(0, offseta) + b.Substring(offsetb, lengthb) + a.Substring(offseta + lengtha);
+		}
+
+		public static string RemoveMultispace(this string s) {
+			while (s.Contains("  ")) {
+				s = s.Replace("  ", " ");
+			}
+			return s;
+		}
 	}
 }
