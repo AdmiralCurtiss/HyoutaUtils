@@ -7,15 +7,24 @@ using System.Threading.Tasks;
 
 namespace HyoutaUtils {
 	public static class StreamUtils {
-		public static void CopyStream( System.IO.Stream input, System.IO.Stream output, long count ) {
-			byte[] buffer = new byte[4096];
+		public static void CopyStream(Stream input, Stream output) {
+			CopyStream(input, output, input.Length - input.Position);
+		}
+
+		public static void CopyStream(Stream input, Stream output, long count) {
+			CopyStream(input, output, (ulong)count);
+		}
+
+		public static void CopyStream(Stream input, Stream output, ulong count) {
+			const ulong bufferSize = 4096;
+			byte[] buffer = new byte[bufferSize];
 			int read;
 
-			long bytesLeft = count;
-			while ( ( read = input.Read( buffer, 0, (int)Math.Min( buffer.LongLength, bytesLeft ) ) ) > 0 ) {
-				output.Write( buffer, 0, read );
-				bytesLeft -= read;
-				if ( bytesLeft <= 0 ) return;
+			ulong bytesLeft = count;
+			while ((read = input.Read(buffer, 0, (int)Math.Min(bufferSize, bytesLeft))) > 0) {
+				output.Write(buffer, 0, read);
+				bytesLeft -= (ulong)read;
+				if (bytesLeft <= 0) return;
 			}
 		}
 
