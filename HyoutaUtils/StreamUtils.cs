@@ -37,7 +37,7 @@ namespace HyoutaUtils {
 			return true;
 		}
 
-		public static ulong ReadUInt64( this Stream s ) {
+		public static ulong ReadUInt64(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			ulong b1 = (ulong)s.ReadByte();
 			ulong b2 = (ulong)s.ReadByte();
 			ulong b3 = (ulong)s.ReadByte();
@@ -47,10 +47,17 @@ namespace HyoutaUtils {
 			ulong b7 = (ulong)s.ReadByte();
 			ulong b8 = (ulong)s.ReadByte();
 
-			return (ulong)( b8 << 56 | b7 << 48 | b6 << 40 | b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (ulong)(b8 << 56 | b7 << 48 | b6 << 40 | b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (ulong)(b1 << 56 | b2 << 48 | b3 << 40 | b4 << 32 | b5 << 24 | b6 << 16 | b7 << 8 | b8);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static ulong ReadUInt56( this Stream s ) {
+		public static ulong ReadUInt56(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			ulong b1 = (ulong)s.ReadByte();
 			ulong b2 = (ulong)s.ReadByte();
 			ulong b3 = (ulong)s.ReadByte();
@@ -59,10 +66,17 @@ namespace HyoutaUtils {
 			ulong b6 = (ulong)s.ReadByte();
 			ulong b7 = (ulong)s.ReadByte();
 
-			return (ulong)( b7 << 48 | b6 << 40 | b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (ulong)(b7 << 48 | b6 << 40 | b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (ulong)(b1 << 48 | b2 << 40 | b3 << 32 | b4 << 24 | b5 << 16 | b6 << 8 | b7);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static ulong ReadUInt48( this Stream s ) {
+		public static ulong ReadUInt48(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			ulong b1 = (ulong)s.ReadByte();
 			ulong b2 = (ulong)s.ReadByte();
 			ulong b3 = (ulong)s.ReadByte();
@@ -70,165 +84,168 @@ namespace HyoutaUtils {
 			ulong b5 = (ulong)s.ReadByte();
 			ulong b6 = (ulong)s.ReadByte();
 
-			return (ulong)( b6 << 40 | b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (ulong)(b6 << 40 | b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (ulong)(b1 << 40 | b2 << 32 | b3 << 24 | b4 << 16 | b5 << 8 | b6);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static ulong ReadUInt40( this Stream s ) {
+		public static ulong ReadUInt40(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			ulong b1 = (ulong)s.ReadByte();
 			ulong b2 = (ulong)s.ReadByte();
 			ulong b3 = (ulong)s.ReadByte();
 			ulong b4 = (ulong)s.ReadByte();
 			ulong b5 = (ulong)s.ReadByte();
 
-			return (ulong)( b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (ulong)(b5 << 32 | b4 << 24 | b3 << 16 | b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (ulong)(b1 << 32 | b2 << 24 | b3 << 16 | b4 << 8 | b5);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static uint ReadUInt32( this Stream s ) {
+		public static uint ReadUInt32(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			int b1 = s.ReadByte();
 			int b2 = s.ReadByte();
 			int b3 = s.ReadByte();
 			int b4 = s.ReadByte();
 
-			return (uint)( b4 << 24 | b3 << 16 | b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (uint)(b4 << 24 | b3 << 16 | b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (uint)(b1 << 24 | b2 << 16 | b3 << 8 | b4);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static uint ReadUInt24( this Stream s ) {
+		public static uint ReadUInt24(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			int b1 = s.ReadByte();
 			int b2 = s.ReadByte();
 			int b3 = s.ReadByte();
 
-			return (uint)( b3 << 16 | b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (uint)(b3 << 16 | b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (uint)(b1 << 16 | b2 << 8 | b3);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static ushort ReadUInt16( this Stream s ) {
+		public static ushort ReadUInt16(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			int b1 = s.ReadByte();
 			int b2 = s.ReadByte();
 
-			return (ushort)( b2 << 8 | b1 );
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					return (ushort)(b2 << 8 | b1);
+				case EndianUtils.Endianness.BigEndian:
+					return (ushort)(b1 << 8 | b2);
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static byte ReadUInt8( this Stream s ) {
-			return Convert.ToByte( s.ReadByte() );
+		public static byte ReadUInt8(this Stream s) {
+			return Convert.ToByte(s.ReadByte());
 		}
 
-		public static long ReadInt64( this Stream s ) {
-			return (long) ReadUInt64( s );
+		public static long ReadInt64(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			return (long)ReadUInt64(s, endian);
 		}
 
-		public static long ReadInt56( this Stream s ) {
-			return (long) ReadUInt56( s );
+		public static int ReadInt32(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			return (int)ReadUInt32(s, endian);
 		}
 
-		public static long ReadInt48( this Stream s ) {
-			return (long) ReadUInt48( s );
+		public static short ReadInt16(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			return (short)ReadUInt16(s, endian);
 		}
 
-		public static long ReadInt40( this Stream s ) {
-			return (long) ReadUInt40( s );
+		public static sbyte ReadInt8(this Stream s) {
+			return (sbyte)ReadUInt8(s);
 		}
 
-		public static int ReadInt32( this Stream s ) {
-			return (int) ReadUInt32( s );
-		}
-
-		public static int ReadInt24( this Stream s ) {
-			return (int) ReadUInt24( s );
-		}
-
-		public static short ReadInt16( this Stream s ) {
-			return (short) ReadUInt16( s );
-		}
-
-		public static sbyte ReadInt8( this Stream s ) {
-			return (sbyte) ReadUInt8( s );
-		}
-
-		public static ulong PeekUInt64( this Stream s ) {
+		public static ulong PeekUInt64(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			ulong retval = s.ReadUInt64();
+			ulong retval = s.ReadUInt64(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static ulong PeekUInt56( this Stream s ) {
+		public static ulong PeekUInt56(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			ulong retval = s.ReadUInt56();
+			ulong retval = s.ReadUInt56(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static ulong PeekUInt48( this Stream s ) {
+		public static ulong PeekUInt48(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			ulong retval = s.ReadUInt48();
+			ulong retval = s.ReadUInt48(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static ulong PeekUInt40( this Stream s ) {
+		public static ulong PeekUInt40(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			ulong retval = s.ReadUInt40();
+			ulong retval = s.ReadUInt40(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static uint PeekUInt32( this Stream s ) {
+		public static uint PeekUInt32(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			uint retval = s.ReadUInt32();
+			uint retval = s.ReadUInt32(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static uint PeekUInt24( this Stream s ) {
+		public static uint PeekUInt24(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			uint retval = s.ReadUInt24();
+			uint retval = s.ReadUInt24(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static ushort PeekUInt16( this Stream s ) {
+		public static ushort PeekUInt16(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			long pos = s.Position;
-			ushort retval = s.ReadUInt16();
+			ushort retval = s.ReadUInt16(endian);
 			s.Position = pos;
 			return retval;
 		}
 
-		public static byte PeekUInt8( this Stream s ) {
+		public static byte PeekUInt8(this Stream s) {
 			long pos = s.Position;
 			byte retval = s.ReadUInt8();
 			s.Position = pos;
 			return retval;
 		}
 
-		public static long PeekInt64( this Stream s ) {
-			return (long) PeekUInt64( s );
+		public static long PeekInt64(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			return (long)PeekUInt64(s, endian);
 		}
 
-		public static long PeekInt56( this Stream s ) {
-			return (long) PeekUInt56( s );
+		public static int PeekInt32(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			return (int)PeekUInt32(s, endian);
 		}
 
-		public static long PeekInt48( this Stream s ) {
-			return (long) PeekUInt48( s );
+		public static short PeekInt16(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			return (short)PeekUInt16(s, endian);
 		}
 
-		public static long PeekInt40( this Stream s ) {
-			return (long) PeekUInt40( s );
-		}
-
-		public static int PeekInt32( this Stream s ) {
-			return (int) PeekUInt32( s );
-		}
-
-		public static int PeekInt24( this Stream s ) {
-			return (int) PeekUInt24( s );
-		}
-
-		public static short PeekInt16( this Stream s ) {
-			return (short) PeekUInt16( s );
-		}
-
-		public static sbyte PeekInt8( this Stream s ) {
-			return (sbyte) PeekUInt8( s );
+		public static sbyte PeekInt8(this Stream s) {
+			return (sbyte)PeekUInt8(s);
 		}
 
 		public static void WriteUInt64( this Stream s, ulong num ) {
@@ -265,7 +282,7 @@ namespace HyoutaUtils {
 		public static uint[] ReadUInt32Array( this Stream s, long count, EndianUtils.Endianness endianness = EndianUtils.Endianness.LittleEndian ) {
 			uint[] data = new uint[count];
 			for ( long i = 0; i < count; ++i ) {
-				data[i] = s.ReadUInt32().FromEndian( endianness );
+				data[i] = s.ReadUInt32(endianness);
 			}
 			return data;
 		}
@@ -273,9 +290,9 @@ namespace HyoutaUtils {
 		public static ulong ReadUInt( this Stream s, BitUtils.Bitness bits, EndianUtils.Endianness endian ) {
 			switch ( bits ) {
 				case BitUtils.Bitness.B8: return s.ReadUInt8();
-				case BitUtils.Bitness.B16: return s.ReadUInt16().FromEndian( endian );
-				case BitUtils.Bitness.B32: return s.ReadUInt32().FromEndian( endian );
-				case BitUtils.Bitness.B64: return s.ReadUInt64().FromEndian( endian );
+				case BitUtils.Bitness.B16: return s.ReadUInt16(endian);
+				case BitUtils.Bitness.B32: return s.ReadUInt32(endian);
+				case BitUtils.Bitness.B64: return s.ReadUInt64(endian);
 			}
 			throw new Exception( "Reading uint not implemented for bitness " + bits.ToString() );
 		}
@@ -283,9 +300,9 @@ namespace HyoutaUtils {
 		public static long ReadInt( this Stream s, BitUtils.Bitness bits, EndianUtils.Endianness endian ) {
 			switch ( bits ) {
 				case BitUtils.Bitness.B8: return s.ReadInt8();
-				case BitUtils.Bitness.B16: return s.ReadInt16().FromEndian( endian );
-				case BitUtils.Bitness.B32: return s.ReadInt32().FromEndian( endian );
-				case BitUtils.Bitness.B64: return s.ReadInt64().FromEndian( endian );
+				case BitUtils.Bitness.B16: return s.ReadInt16(endian);
+				case BitUtils.Bitness.B32: return s.ReadInt32(endian);
+				case BitUtils.Bitness.B64: return s.ReadInt64(endian);
 			}
 			throw new Exception( "Reading int not implemented for bitness " + bits.ToString() );
 		}
@@ -293,9 +310,9 @@ namespace HyoutaUtils {
 		public static ulong PeekUInt( this Stream s, BitUtils.Bitness bits, EndianUtils.Endianness endian ) {
 			switch ( bits ) {
 				case BitUtils.Bitness.B8: return s.PeekUInt8();
-				case BitUtils.Bitness.B16: return s.PeekUInt16().FromEndian( endian );
-				case BitUtils.Bitness.B32: return s.PeekUInt32().FromEndian( endian );
-				case BitUtils.Bitness.B64: return s.PeekUInt64().FromEndian( endian );
+				case BitUtils.Bitness.B16: return s.PeekUInt16(endian);
+				case BitUtils.Bitness.B32: return s.PeekUInt32(endian);
+				case BitUtils.Bitness.B64: return s.PeekUInt64(endian);
 			}
 			throw new Exception( "Peeking uint not implemented for bitness " + bits.ToString() );
 		}
@@ -303,9 +320,9 @@ namespace HyoutaUtils {
 		public static long PeekInt( this Stream s, BitUtils.Bitness bits, EndianUtils.Endianness endian ) {
 			switch ( bits ) {
 				case BitUtils.Bitness.B8: return s.PeekInt8();
-				case BitUtils.Bitness.B16: return s.PeekInt16().FromEndian( endian );
-				case BitUtils.Bitness.B32: return s.PeekInt32().FromEndian( endian );
-				case BitUtils.Bitness.B64: return s.PeekInt64().FromEndian( endian );
+				case BitUtils.Bitness.B16: return s.PeekInt16(endian);
+				case BitUtils.Bitness.B32: return s.PeekInt32(endian);
+				case BitUtils.Bitness.B64: return s.PeekInt64(endian);
 			}
 			throw new Exception( "Peeking int not implemented for bitness " + bits.ToString() );
 		}
