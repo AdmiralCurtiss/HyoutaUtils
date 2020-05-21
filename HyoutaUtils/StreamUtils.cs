@@ -248,16 +248,213 @@ namespace HyoutaUtils {
 			return (sbyte)PeekUInt8(s);
 		}
 
-		public static void WriteUInt64( this Stream s, ulong num ) {
-			s.Write( BitConverter.GetBytes( num ), 0, 8 );
+		public static void WriteUInt64(this Stream s, ulong num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+			byte b3 = (byte)((num >> 16) & 0xFF);
+			byte b4 = (byte)((num >> 24) & 0xFF);
+			byte b5 = (byte)((num >> 32) & 0xFF);
+			byte b6 = (byte)((num >> 40) & 0xFF);
+			byte b7 = (byte)((num >> 48) & 0xFF);
+			byte b8 = (byte)((num >> 56) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					s.WriteByte(b3);
+					s.WriteByte(b4);
+					s.WriteByte(b5);
+					s.WriteByte(b6);
+					s.WriteByte(b7);
+					s.WriteByte(b8);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b8);
+					s.WriteByte(b7);
+					s.WriteByte(b6);
+					s.WriteByte(b5);
+					s.WriteByte(b4);
+					s.WriteByte(b3);
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static void WriteUInt32( this Stream s, uint num ) {
-			s.Write( BitConverter.GetBytes( num ), 0, 4 );
+		public static void WriteUInt56(this Stream s, ulong num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+			byte b3 = (byte)((num >> 16) & 0xFF);
+			byte b4 = (byte)((num >> 24) & 0xFF);
+			byte b5 = (byte)((num >> 32) & 0xFF);
+			byte b6 = (byte)((num >> 40) & 0xFF);
+			byte b7 = (byte)((num >> 48) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					s.WriteByte(b3);
+					s.WriteByte(b4);
+					s.WriteByte(b5);
+					s.WriteByte(b6);
+					s.WriteByte(b7);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b7);
+					s.WriteByte(b6);
+					s.WriteByte(b5);
+					s.WriteByte(b4);
+					s.WriteByte(b3);
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
 		}
 
-		public static void WriteUInt16( this Stream s, ushort num ) {
-			s.Write( BitConverter.GetBytes( num ), 0, 2 );
+		public static void WriteUInt48(this Stream s, ulong num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+			byte b3 = (byte)((num >> 16) & 0xFF);
+			byte b4 = (byte)((num >> 24) & 0xFF);
+			byte b5 = (byte)((num >> 32) & 0xFF);
+			byte b6 = (byte)((num >> 40) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					s.WriteByte(b3);
+					s.WriteByte(b4);
+					s.WriteByte(b5);
+					s.WriteByte(b6);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b6);
+					s.WriteByte(b5);
+					s.WriteByte(b4);
+					s.WriteByte(b3);
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
+		}
+
+		public static void WriteUInt40(this Stream s, ulong num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+			byte b3 = (byte)((num >> 16) & 0xFF);
+			byte b4 = (byte)((num >> 24) & 0xFF);
+			byte b5 = (byte)((num >> 32) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					s.WriteByte(b3);
+					s.WriteByte(b4);
+					s.WriteByte(b5);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b5);
+					s.WriteByte(b4);
+					s.WriteByte(b3);
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
+		}
+
+		public static void WriteUInt32(this Stream s, uint num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+			byte b3 = (byte)((num >> 16) & 0xFF);
+			byte b4 = (byte)((num >> 24) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					s.WriteByte(b3);
+					s.WriteByte(b4);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b4);
+					s.WriteByte(b3);
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
+		}
+
+		public static void WriteUInt24(this Stream s, uint num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+			byte b3 = (byte)((num >> 16) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					s.WriteByte(b3);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b3);
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
+		}
+
+		public static void WriteUInt16(this Stream s, ushort num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			byte b1 = (byte)(num & 0xFF);
+			byte b2 = (byte)((num >> 8) & 0xFF);
+
+			switch (endian) {
+				case EndianUtils.Endianness.LittleEndian:
+					s.WriteByte(b1);
+					s.WriteByte(b2);
+					return;
+				case EndianUtils.Endianness.BigEndian:
+					s.WriteByte(b2);
+					s.WriteByte(b1);
+					return;
+				default:
+					throw new Exception("unknown endianness");
+			}
+		}
+
+		public static void WriteUInt8(this Stream s, byte num) {
+			s.WriteByte(num);
+		}
+
+		public static void WriteInt64(this Stream s, long num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			s.WriteUInt64((ulong)num, endian);
+		}
+
+		public static void WriteInt32(this Stream s, int num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			s.WriteUInt32((uint)num, endian);
+		}
+
+		public static void WriteInt16(this Stream s, short num, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
+			s.WriteUInt16((ushort)num, endian);
+		}
+
+		public static void WriteInt8(this Stream s, sbyte num) {
+			s.WriteUInt8((byte)num);
 		}
 
 		public static void DiscardBytes( this Stream s, uint count ) {
@@ -325,6 +522,26 @@ namespace HyoutaUtils {
 				case BitUtils.Bitness.B64: return s.PeekInt64(endian);
 			}
 			throw new Exception( "Peeking int not implemented for bitness " + bits.ToString() );
+		}
+
+		public static void WriteUInt(this Stream s, ulong num, BitUtils.Bitness bits, EndianUtils.Endianness endian) {
+			switch (bits) {
+				case BitUtils.Bitness.B8: s.WriteUInt8((byte)num); return;
+				case BitUtils.Bitness.B16: s.WriteUInt16((ushort)num, endian); return;
+				case BitUtils.Bitness.B32: s.WriteUInt32((uint)num, endian); return;
+				case BitUtils.Bitness.B64: s.WriteUInt64(num, endian); return;
+			}
+			throw new Exception("Writing uint not implemented for bitness " + bits.ToString());
+		}
+
+		public static void WriteInt(this Stream s, long num, BitUtils.Bitness bits, EndianUtils.Endianness endian) {
+			switch (bits) {
+				case BitUtils.Bitness.B8: s.WriteInt8((sbyte)num); return;
+				case BitUtils.Bitness.B16: s.WriteInt16((short)num, endian); return;
+				case BitUtils.Bitness.B32: s.WriteInt32((int)num, endian); return;
+				case BitUtils.Bitness.B64: s.WriteInt64(num, endian); return;
+			}
+			throw new Exception("Writing int not implemented for bitness " + bits.ToString());
 		}
 
 		public static void ReadAlign( this Stream s, long alignment ) {
