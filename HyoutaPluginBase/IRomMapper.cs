@@ -2,7 +2,7 @@
 
 namespace HyoutaPluginBase {
 	public interface IRomMapper {
-		bool TryMapRamToRom(uint ramAddress, out uint value);
-		bool TryMapRomToRam(uint romAddress, out uint value);
+		bool TryMapRamToRom(ulong ramAddress, out ulong value);
+		bool TryMapRomToRam(ulong romAddress, out ulong value);
 	}
 }
