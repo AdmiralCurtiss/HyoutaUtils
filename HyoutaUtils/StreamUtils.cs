@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HyoutaPluginBase;
+using HyoutaUtils.Streams;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -467,6 +469,54 @@ namespace HyoutaUtils {
 			return sd;
 		}
 
+		public static MemoryStream ReadMemorySubstream(this Stream stream, long bytecount) {
+			MemoryStream ms = new MemoryStream((int)bytecount);
+			ms.Write(ReadBytes(stream, bytecount));
+			ms.Position = 0;
+			return ms;
+		}
+
+		public static DuplicatableStream ReadDuplicatableSubstream(this Stream stream, long bytecount) {
+			DuplicatableStream ds = stream as DuplicatableStream;
+			if (ds != null) {
+				long p = ds.Position;
+				PartialStream ps = new PartialStream(ds, p, bytecount);
+				ds.Position = p + bytecount;
+				return ps;
+			} else {
+				return new DuplicatableByteArrayStream(ReadBytes(stream, bytecount));
+			}
+		}
+
+		public static byte[] ReadBytesFromLocationAndReset(this Stream stream, long position, long count) {
+			long p = stream.Position;
+			stream.Position = position;
+			byte[] bytes = ReadBytes(stream, count);
+			stream.Position = p;
+			return bytes;
+		}
+
+		public static MemoryStream ReadMemorySubstreamFromLocationAndReset(this Stream stream, long position, long bytecount) {
+			long p = stream.Position;
+			stream.Position = position;
+			MemoryStream ms = ReadMemorySubstream(stream, bytecount);
+			stream.Position = p;
+			return ms;
+		}
+
+		public static DuplicatableStream ReadDuplicatableSubstreamFromLocationAndReset(this Stream stream, long position, long bytecount) {
+			long p = stream.Position;
+			DuplicatableStream ds = stream as DuplicatableStream;
+			if (ds != null) {
+				return new PartialStream(ds, p, bytecount);
+			} else {
+				stream.Position = position;
+				DuplicatableStream nds = new DuplicatableByteArrayStream(ReadBytes(stream, bytecount));
+				stream.Position = p;
+				return nds;
+			}
+		}
+
 		public static byte[] ReadUInt8Array( this Stream s, long count ) {
 			// TODO: Isn't this just the same as ReadBytes() except slower?
 			byte[] data = new byte[count];
@@ -779,6 +829,18 @@ namespace HyoutaUtils {
 			s.Read(data, 0, (int)s.Length);
 			s.Dispose();
 			return data;
+		}
+
+		public static void SwapBytes(this Stream s, long pos0, long pos1) {
+			long oldp = s.Position;
+			s.Position = pos0;
+			byte b0 = s.ReadUInt8();
+			s.Position = pos1;
+			byte b1 = s.PeekUInt8();
+			s.WriteByte(b0);
+			s.Position = pos0;
+			s.WriteByte(b1);
+			s.Position = oldp;
 		}
 	}
 }
