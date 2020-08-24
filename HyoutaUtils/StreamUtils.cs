@@ -831,6 +831,33 @@ namespace HyoutaUtils {
 			return data;
 		}
 
+		public static DuplicatableByteArrayStream CopyToByteArrayStream(this Stream s) {
+			var bas = s as DuplicatableByteArrayStream;
+			if (bas != null) {
+				var nbas = bas.Duplicate() as DuplicatableByteArrayStream;
+				if (nbas != null) {
+					return nbas;
+				} else {
+					Console.WriteLine("Internal error."); // should never happen
+				}
+			}
+			return new DuplicatableByteArrayStream(s.CopyToByteArray());
+		}
+
+		public static DuplicatableByteArrayStream CopyToByteArrayStreamAndDispose(this Stream s) {
+			var bas = s as DuplicatableByteArrayStream;
+			if (bas != null) {
+				var nbas = bas.Duplicate() as DuplicatableByteArrayStream;
+				if (nbas != null) {
+					bas.Dispose();
+					return nbas;
+				} else {
+					Console.WriteLine("Internal error."); // should never happen
+				}
+			}
+			return new DuplicatableByteArrayStream(s.CopyToByteArrayAndDispose());
+		}
+
 		public static void SwapBytes(this Stream s, long pos0, long pos1) {
 			long oldp = s.Position;
 			s.Position = pos0;
