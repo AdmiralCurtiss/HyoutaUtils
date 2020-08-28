@@ -39,6 +39,25 @@ namespace HyoutaUtils {
 			return true;
 		}
 
+		public static bool IsIdentical(this Stream str, Stream other) {
+			long slen = str.Length;
+			long olen = other.Length;
+			if (slen != olen) {
+				return false;
+			}
+
+			long spos = str.Position;
+			long opos = other.Position;
+			try {
+				str.Position = 0;
+				other.Position = 0;
+				return IsIdentical(str, other, slen);
+			} finally {
+				other.Position = opos;
+				str.Position = spos;
+			}
+		}
+
 		public static ulong ReadUInt64(this Stream s, EndianUtils.Endianness endian = EndianUtils.Endianness.LittleEndian) {
 			ulong b1 = (ulong)s.ReadByte();
 			ulong b2 = (ulong)s.ReadByte();
