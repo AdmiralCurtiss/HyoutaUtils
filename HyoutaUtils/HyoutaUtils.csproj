@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="ArrayUtils.cs" />
     <Compile Include="BitUtils.cs" />
+    <Compile Include="Checksum\CRC32.cs" />
+    <Compile Include="Checksum\CRC32Algorithm.cs" />
     <Compile Include="EndianUtils.cs" />
     <Compile Include="ExternalProgramExecution.cs" />
     <Compile Include="HexUtils.cs" />
@@ -65,5 +67,6 @@
       <Name>HyoutaPluginBase</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
