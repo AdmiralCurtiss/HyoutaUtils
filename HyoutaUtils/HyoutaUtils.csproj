@@ -43,8 +43,11 @@
   <ItemGroup>
     <Compile Include="ArrayUtils.cs" />
     <Compile Include="BitUtils.cs" />
+    <Compile Include="ChecksumUtils.cs" />
     <Compile Include="Checksum\CRC32.cs" />
     <Compile Include="Checksum\CRC32Algorithm.cs" />
+    <Compile Include="Checksum\MD5.cs" />
+    <Compile Include="Checksum\SHA1.cs" />
     <Compile Include="EndianUtils.cs" />
     <Compile Include="ExternalProgramExecution.cs" />
     <Compile Include="HexUtils.cs" />
