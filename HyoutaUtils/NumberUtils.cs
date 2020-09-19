@@ -32,29 +32,29 @@ namespace HyoutaUtils {
 			return f;
 		}
 
-		public static int Align( this int number, int alignment ) {
-			return (int)Align( (uint)number, (uint)alignment );
+		public static int Align(this int number, int alignment) {
+			return (int)Align((uint)number, (uint)alignment);
 		}
 
-		public static uint Align( this uint number, uint alignment ) {
+		public static uint Align(this uint number, uint alignment) {
 			uint diff = number % alignment;
-			if ( diff == 0 ) {
+			if (diff == 0) {
 				return number;
 			} else {
-				return ( number + ( alignment - diff ) );
+				return (number + (alignment - diff));
 			}
 		}
 
-		public static long Align( this long number, int alignment ) {
-			return (long)Align( (ulong)number, (uint)alignment );
+		public static long Align(this long number, long alignment) {
+			return (long)Align((ulong)number, (ulong)alignment);
 		}
 
-		public static ulong Align( this ulong number, uint alignment ) {
+		public static ulong Align(this ulong number, ulong alignment) {
 			ulong diff = number % alignment;
-			if ( diff == 0 ) {
+			if (diff == 0) {
 				return number;
 			} else {
-				return ( number + ( alignment - diff ) );
+				return (number + (alignment - diff));
 			}
 		}
 

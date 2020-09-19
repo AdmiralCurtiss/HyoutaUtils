@@ -478,8 +478,12 @@ namespace HyoutaUtils {
 			s.WriteUInt8((byte)num);
 		}
 
-		public static void DiscardBytes( this Stream s, uint count ) {
+		public static void DiscardBytes(this Stream s, long count) {
 			s.Position = s.Position + count;
+		}
+
+		public static void DiscardBytes(this Stream s, ulong count) {
+			s.Position = (long)(((ulong)s.Position) + count);
 		}
 
 		public static byte[] ReadBytes( this Stream stream, long count ) {
