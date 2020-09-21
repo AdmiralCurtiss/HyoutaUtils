@@ -36,6 +36,10 @@ namespace HyoutaUtils {
 			return (int)Align((uint)number, (uint)alignment);
 		}
 
+		public static uint Align(this uint number, int alignment) {
+			return Align(number, (uint)alignment);
+		}
+
 		public static uint Align(this uint number, uint alignment) {
 			uint diff = number % alignment;
 			if (diff == 0) {
@@ -47,6 +51,10 @@ namespace HyoutaUtils {
 
 		public static long Align(this long number, long alignment) {
 			return (long)Align((ulong)number, (ulong)alignment);
+		}
+
+		public static ulong Align(this ulong number, long alignment) {
+			return Align(number, (ulong)alignment);
 		}
 
 		public static ulong Align(this ulong number, ulong alignment) {

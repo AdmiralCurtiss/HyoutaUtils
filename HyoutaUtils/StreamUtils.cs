@@ -486,6 +486,18 @@ namespace HyoutaUtils {
 			s.Position = (long)(((ulong)s.Position) + count);
 		}
 
+		public static void WriteZeros(this Stream s, long count) {
+			for (long i = 0; i < count; ++i) {
+				s.WriteByte(0);
+			}
+		}
+
+		public static void WriteZeros(this Stream s, ulong count) {
+			for (ulong i = 0; i < count; ++i) {
+				s.WriteByte(0);
+			}
+		}
+
 		public static byte[] ReadBytes( this Stream stream, long count ) {
 			byte[] sd = new byte[count];
 			stream.Read( sd, 0, sd.Length );
