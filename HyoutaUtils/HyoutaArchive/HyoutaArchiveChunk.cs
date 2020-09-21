@@ -114,7 +114,7 @@ namespace HyoutaUtils.HyoutaArchive {
 					List<HyoutaArchiveFileInfo> files = new List<HyoutaArchiveFileInfo>((int)filecount);
 					for (ulong i = 0; i < filecount; ++i) {
 						ulong offset = dataBlockStream.ReadUInt64(e) << packedAlignment;
-						ulong filesize = dataBlockStream.ReadUInt64(e) << packedAlignment;
+						ulong filesize = dataBlockStream.ReadUInt64(e);
 						HyoutaArchiveFileInfo fi = new HyoutaArchiveFileInfo();
 						if (hasDummyContent) {
 							fi.DummyContent = dataBlockStream.ReadBytes(dummyContentLength);
@@ -323,7 +323,7 @@ namespace HyoutaUtils.HyoutaArchive {
 					// write file info
 					target.Position = (singleFileInfoLength * i) + offsetToFirstFileInfo + startPosition;
 					target.WriteUInt64(((ulong)offsetToNextFile) >> packedAlignment, endian);
-					target.WriteUInt64(((ulong)fs.Length) >> packedAlignment, endian);
+					target.WriteUInt64((ulong)fs.Length, endian);
 					if (hasDummyContent) {
 						if (fi.DummyContent != null) {
 							target.Write(fi.DummyContent);
