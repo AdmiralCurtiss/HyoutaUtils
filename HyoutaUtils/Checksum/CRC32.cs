@@ -7,6 +7,16 @@ using System.Threading.Tasks;
 namespace HyoutaUtils.Checksum {
 	public struct CRC32 : IEquatable<CRC32> {
 		public uint Value { get; private set; }
+		public byte[] Bytes {
+			get {
+				return new byte[4] {
+					(byte)((Value >> 24) & 0xff),
+					(byte)((Value >> 16) & 0xff),
+					(byte)((Value >> 8) & 0xff),
+					(byte)(Value & 0xff),
+				};
+			}
+		}
 
 		public CRC32(byte[] value) {
 			if (value.Length != 4) {
