@@ -47,14 +47,18 @@ namespace HyoutaUtils.HyoutaArchive {
 		public IFile AsFile => null;
 		public IContainer AsContainer => this;
 
-		public INode GetChildByIndex(long index) {
+		public HyoutaArchiveFileInfo GetFile(long index) {
 			// is this right???
 			for (int i = 1; i < FileCountOffsets.Length; ++i) {
 				if (index < FileCountOffsets[i]) {
-					return Chunks[i - 1].GetChildByIndex(index - FileCountOffsets[i - 1]);
+					return Chunks[i - 1].GetFile(index - FileCountOffsets[i - 1]);
 				}
 			}
 			return null;
+		}
+
+		public INode GetChildByIndex(long index) {
+			return GetFile(index);
 		}
 
 		public INode GetChildByName(string name) {

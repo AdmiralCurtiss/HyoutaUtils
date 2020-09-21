@@ -11,5 +11,9 @@ namespace HyoutaUtils.HyoutaArchive {
 			// TODO: implement a format for this
 			stream.DiscardBytes(maxBytes);
 		}
+
+		public byte[] Serialize(EndianUtils.Endianness endian) {
+			throw new NotImplementedException();
+		}
 	}
 }

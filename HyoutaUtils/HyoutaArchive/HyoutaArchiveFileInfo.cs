@@ -11,12 +11,13 @@ namespace HyoutaUtils.HyoutaArchive {
 	public class HyoutaArchiveFileInfo : IFile {
 		public DuplicatableStream Data;
 
+		public byte[] DummyContent;
 		public string Filename;
 		public HyoutaArchiveCompressionInfo Compression;
 		public HyoutaArchiveBpsPatchInfo BpsPatch;
-		public CRC32 crc32;
-		public MD5 md5;
-		public SHA1 sha1;
+		public CRC32? crc32;
+		public MD5? md5;
+		public SHA1? sha1;
 
 		#region IFile implementation
 		public DuplicatableStream DataStream => Data.Duplicate();

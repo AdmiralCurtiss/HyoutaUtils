@@ -4,6 +4,7 @@ using HyoutaUtils.Checksum;
 using HyoutaUtils.Streams;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -115,7 +116,9 @@ namespace HyoutaUtils.HyoutaArchive {
 						ulong offset = dataBlockStream.ReadUInt64(e) << packedAlignment;
 						ulong filesize = dataBlockStream.ReadUInt64(e) << packedAlignment;
 						HyoutaArchiveFileInfo fi = new HyoutaArchiveFileInfo();
-						dataBlockStream.DiscardBytes(dummyContentLength);
+						if (hasDummyContent) {
+							fi.DummyContent = dataBlockStream.ReadBytes(dummyContentLength);
+						}
 						if (hasFilename) {
 							fi.Filename = ReadString(dataBlockStream, filenameLength, e);
 						}
@@ -167,9 +170,16 @@ namespace HyoutaUtils.HyoutaArchive {
 			}
 		}
 
-		private uint ReadContentLength(DuplicatableStream dataBlockStream, EndianUtils.Endianness e) {
+		private static uint ReadContentLength(DuplicatableStream dataBlockStream, EndianUtils.Endianness e) {
 			ushort l = dataBlockStream.ReadUInt16(e);
 			return l == 0 ? 0x10000 : (uint)l;
+		}
+
+		private static void WriteContentLength(uint value, Stream stream, EndianUtils.Endianness e) {
+			if (value == 0 || value > 0x10000) {
+				throw new Exception("invalid content length");
+			}
+			stream.WriteUInt16((ushort)(value == 0x10000 ? 0 : value), e);
 		}
 
 		private static string ReadString(DuplicatableStream s, uint maxBytes, EndianUtils.Endianness e) {
@@ -190,6 +200,193 @@ namespace HyoutaUtils.HyoutaArchive {
 			string str = s.ReadSizedString((long)length, TextUtils.GameTextEncoding.UTF8);
 			s.DiscardBytes(restBytes - length);
 			return str;
+		}
+
+		private static byte[] EncodeString(string value, EndianUtils.Endianness e) {
+			using (var ms = new MemoryStream()) {
+				ms.WriteUInt64(0);
+				ms.WriteString(Encoding.UTF8, value);
+				ms.Position = 0;
+				ms.WriteUInt64((ulong)ms.Length - 8, e);
+				return ms.CopyToByteArrayAndDispose();
+			}
+		}
+
+		public static void Pack(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignmentRaw, EndianUtils.Endianness endian, HyoutaArchiveCompressionInfo compressionInfo) {
+			long startPosition = target.Position;
+
+			bool isCompressed = compressionInfo != null;
+			byte packedAlignment = (byte)(packedAlignmentRaw & 0x3fu);
+			byte extra = (byte)(packedAlignment | (endian == EndianUtils.Endianness.BigEndian ? 0x40 : 0) | (isCompressed ? 0x80 : 0));
+			target.WriteUInt64(0x6b6e7568636168ul | (((ulong)extra) << 56), EndianUtils.Endianness.LittleEndian);
+			target.WriteUInt64(0); // aligned end-of-file offset, fill in later
+			target.WriteUInt64(0); // aligned table of contents offset in data block, fill in later
+			target.WriteUInt64((ulong)files.Count, endian);
+
+			ulong tableOfContentsOffsetInDataBlock;
+			if (isCompressed) {
+				MemoryStream ms = new MemoryStream();
+				tableOfContentsOffsetInDataBlock = PackDataBlock(ms, files, packedAlignment, endian);
+				ms.Position = 0;
+				(byte[] compressionInfoBytes, byte[] compressedData) = HyoutaArchiveCompression.Compress(compressionInfo, ms, packedAlignment);
+
+				// TODO: respect alignment here
+				uint compressionInfoLength = ((uint)compressionInfoBytes.Length.Align(4));
+				target.WriteUInt16((ushort)(compressionInfoLength == 0x10000 ? 0 : compressionInfoLength), endian);
+				target.Write(compressionInfoBytes);
+				for (int i = 0; i < (compressionInfoLength - compressionInfoBytes.Length); ++i) {
+					target.WriteByte(0);
+				}
+				target.Write(compressedData);
+			} else {
+				long dataBlockStartPos = (target.Position - startPosition).Align(1 << packedAlignment) + startPosition;
+				while (target.Position < dataBlockStartPos) {
+					target.WriteByte(0);
+				}
+				tableOfContentsOffsetInDataBlock = PackDataBlock(target, files, packedAlignment, endian);
+			}
+
+			long endPosition = target.Position;
+			long fileLength = endPosition - startPosition;
+			target.Position = startPosition + 8;
+			target.WriteUInt64(((ulong)fileLength) >> packedAlignment, endian);
+			target.WriteUInt64(tableOfContentsOffsetInDataBlock >> packedAlignment, endian);
+			target.Position = endPosition;
+		}
+
+		private static ulong PackDataBlock(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignment, EndianUtils.Endianness endian) {
+			long startPosition = target.Position;
+			target.WriteUInt16(0); // offsetToFirstFileInfo, fill in later
+
+			bool hasDummyContent = files.Any(x => x.DummyContent != null);
+			uint dummyContentLength = hasDummyContent ? ((uint)files.Max(x => x.DummyContent?.Length ?? 0)).Align(1 << packedAlignment) : 0;
+			bool hasFilename = files.Any(x => x.Filename != null);
+			uint filenameLength = hasFilename ? ((uint)files.Max(x => x.Filename != null ? EncodeString(x.Filename, endian).Length : 0)).Align(1 << packedAlignment) : 0;
+			bool hasCompression = false; // TODO: implement this
+			uint compressionInfoLength = 0; // TODO: implement this
+			bool hasBpsPatch = false; // TODO: implement this
+			uint bpsPatchInfoLength = 0; // TODO: implement this
+			bool hasCrc32 = files.Any(x => x.crc32 != null);
+			uint crc32ContentLength = hasCrc32 ? 4u.Align(1 << packedAlignment) : 0u;
+			bool hasMd5 = files.Any(x => x.md5 != null);
+			uint md5ContentLength = hasMd5 ? 16u.Align(1 << packedAlignment) : 0u;
+			bool hasSha1 = files.Any(x => x.sha1 != null);
+			uint sha1ContentLength = hasSha1 ? 20u.Align(1 << packedAlignment) : 0u;
+
+			ushort contentBitfield1 = 0;
+			contentBitfield1 |= (ushort)(hasDummyContent ? 0x0001u : 0);
+			contentBitfield1 |= (ushort)(hasFilename ? 0x0002u : 0);
+			contentBitfield1 |= (ushort)(hasCompression ? 0x0004u : 0);
+			contentBitfield1 |= (ushort)(hasBpsPatch ? 0x0008u : 0);
+			contentBitfield1 |= (ushort)(hasCrc32 ? 0x0010u : 0);
+			contentBitfield1 |= (ushort)(hasMd5 ? 0x0020u : 0);
+			contentBitfield1 |= (ushort)(hasSha1 ? 0x0040u : 0);
+			target.WriteUInt16(contentBitfield1, endian);
+
+			if (hasDummyContent) {
+				WriteContentLength(dummyContentLength, target, endian);
+			}
+			if (hasFilename) {
+				WriteContentLength(filenameLength, target, endian);
+			}
+			if (hasCompression) {
+				WriteContentLength(compressionInfoLength, target, endian);
+			}
+			if (hasBpsPatch) {
+				WriteContentLength(bpsPatchInfoLength, target, endian);
+			}
+			if (hasCrc32) {
+				WriteContentLength(crc32ContentLength, target, endian);
+			}
+			if (hasMd5) {
+				WriteContentLength(md5ContentLength, target, endian);
+			}
+			if (hasSha1) {
+				WriteContentLength(sha1ContentLength, target, endian);
+			}
+
+			// TODO: respect alignment here
+			long offsetToFirstFileInfo = target.Position - startPosition;
+			target.Position = startPosition;
+			WriteContentLength((uint)offsetToFirstFileInfo, target, endian);
+			target.Position = startPosition + offsetToFirstFileInfo;
+
+			long singleFileInfoLength = 16 + dummyContentLength + filenameLength + compressionInfoLength + bpsPatchInfoLength + crc32ContentLength + md5ContentLength + sha1ContentLength;
+			long totalFileInfoLength = singleFileInfoLength * files.Count;
+			long offsetToFirstFile = (offsetToFirstFileInfo + totalFileInfoLength).Align(1 << packedAlignment);
+			StreamUtils.WriteZeros(target, offsetToFirstFile - offsetToFirstFileInfo);
+
+			long offsetToNextFile = offsetToFirstFile;
+			for (int i = 0; i < files.Count; ++i) {
+				HyoutaArchiveFileInfo fi = files[i];
+				using (DuplicatableStream fs = fi.DataStream.Duplicate()) {
+					// write file info
+					target.Position = (singleFileInfoLength * i) + offsetToFirstFileInfo + startPosition;
+					target.WriteUInt64(((ulong)offsetToNextFile) >> packedAlignment, endian);
+					target.WriteUInt64(((ulong)fs.Length) >> packedAlignment, endian);
+					if (hasDummyContent) {
+						if (fi.DummyContent != null) {
+							target.Write(fi.DummyContent);
+							target.WriteZeros(dummyContentLength - fi.DummyContent.Length);
+						} else {
+							target.WriteZeros(dummyContentLength);
+						}
+					}
+					if (hasFilename) {
+						if (fi.Filename != null) {
+							byte[] str = EncodeString(fi.Filename, endian);
+							target.Write(str);
+							target.WriteZeros(filenameLength - str.Length);
+						} else {
+							target.WriteZeros(filenameLength);
+						}
+					}
+					if (hasCompression) {
+						// TODO
+					}
+					if (hasBpsPatch) {
+						// TODO
+					}
+					if (hasCrc32) {
+						if (fi.crc32.HasValue) {
+							target.Write(fi.crc32.Value.Bytes);
+							target.WriteZeros(crc32ContentLength - 4);
+						} else {
+							target.WriteZeros(crc32ContentLength);
+						}
+					}
+					if (hasMd5) {
+						if (fi.md5.HasValue) {
+							target.Write(fi.md5.Value.Value);
+							target.WriteZeros(md5ContentLength - 16);
+						} else {
+							target.WriteZeros(md5ContentLength);
+						}
+					}
+					if (hasSha1) {
+						if (fi.sha1.HasValue) {
+							target.Write(fi.sha1.Value.Value);
+							target.WriteZeros(sha1ContentLength - 20);
+						} else {
+							target.WriteZeros(sha1ContentLength);
+						}
+					}
+
+					// write file and update next file offset
+					target.Position = offsetToNextFile + startPosition;
+					fs.Position = 0;
+					StreamUtils.CopyStream(fs, target);
+					long currentEnd = offsetToNextFile + fs.Length;
+					offsetToNextFile = (target.Position - startPosition).Align(1 << packedAlignment);
+					long filerest = offsetToNextFile - currentEnd;
+					target.WriteZeros(filerest);
+				}
+			}
+
+			long endPosition = offsetToNextFile + startPosition;
+			target.Position = endPosition;
+
+			return 0; // we currently pack the table of contents always at 0 in the data block; return offset here otherwise
 		}
 
 		public HyoutaArchiveFileInfo GetFile(long index) {
