@@ -53,6 +53,7 @@
     <Compile Include="HexUtils.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveBpsPatchInfo.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveChunk.cs" />
+    <Compile Include="HyoutaArchive\HyoutaArchiveChunkInfo.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveCompression.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveCompressionInfo.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveDecompression.cs" />

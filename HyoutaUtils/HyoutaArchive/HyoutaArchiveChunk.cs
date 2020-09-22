@@ -31,15 +31,22 @@ namespace HyoutaUtils.HyoutaArchive {
 					throw new Exception("wrong magic");
 				}
 				byte extra = (byte)((extraMagic >> 56) & 0xffu);
-				byte packedAlignment = (byte)(extra & 0x3fu);
+				byte packedAlignment = (byte)(extra & 0x1fu);
 				long unpackedAlignment = 1l << packedAlignment;
-				bool isBigEndian = (extra & 0x40) != 0;
-				bool isCompressed = (extra & 0x80) != 0;
+				bool hasMetadata = (extra & 0x20) != 0;
+				bool isCompressed = (extra & 0x40) != 0;
+				bool isBigEndian = (extra & 0x80) != 0;
 				EndianUtils.Endianness e = isBigEndian ? EndianUtils.Endianness.BigEndian : EndianUtils.Endianness.LittleEndian;
 				ulong endOfFileOffset = data.ReadUInt64(e) << packedAlignment;
 				ulong tableOfContentsOffset = data.ReadUInt64(e) << packedAlignment;
 				ulong filecount = data.ReadUInt64(e);
 				chunkLength = endOfFileOffset;
+
+				if (hasMetadata) {
+					// just skip past this for now
+					ulong metadataLength = data.ReadUInt64(e);
+					data.DiscardBytes(metadataLength);
+				}
 
 				DuplicatableStream dataBlockStream;
 				if (isCompressed) {
@@ -212,16 +219,21 @@ namespace HyoutaUtils.HyoutaArchive {
 			}
 		}
 
-		public static void Pack(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignmentRaw, EndianUtils.Endianness endian, HyoutaArchiveCompressionInfo compressionInfo) {
+		public static void Pack(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignmentRaw, EndianUtils.Endianness endian, HyoutaArchiveChunkInfo chunkInfo, HyoutaArchiveCompressionInfo compressionInfo) {
 			long startPosition = target.Position;
 
+			bool hasMetadata = chunkInfo != null;
 			bool isCompressed = compressionInfo != null;
-			byte packedAlignment = (byte)(packedAlignmentRaw & 0x3fu);
-			byte extra = (byte)(packedAlignment | (endian == EndianUtils.Endianness.BigEndian ? 0x40 : 0) | (isCompressed ? 0x80 : 0));
+			byte packedAlignment = (byte)(packedAlignmentRaw & 0x1fu);
+			byte extra = (byte)(packedAlignment | (hasMetadata ? 0x20 : 0) | (isCompressed ? 0x40 : 0) | (endian == EndianUtils.Endianness.BigEndian ? 0x80 : 0));
 			target.WriteUInt64(0x6b6e7568636168ul | (((ulong)extra) << 56), EndianUtils.Endianness.LittleEndian);
 			target.WriteUInt64(0); // aligned end-of-file offset, fill in later
 			target.WriteUInt64(0); // aligned table of contents offset in data block, fill in later
 			target.WriteUInt64((ulong)files.Count, endian);
+
+			if (hasMetadata) {
+				PackMetadata(target, chunkInfo, packedAlignment, endian, startPosition);
+			}
 
 			ulong tableOfContentsOffsetInDataBlock;
 			if (isCompressed) {
@@ -257,6 +269,14 @@ namespace HyoutaUtils.HyoutaArchive {
 			// this is used for the individual file info contents instead because otherwise a large alignment would waste a *ton* of bytes with no practical benefit
 			// (as far as I know, anyway; you usually align either to disk sector sizes for loading efficiency, or processor word size, and the latter should be the only relevant one if align *within* a data chunk)
 			return packedAlignment > 4 ? (byte)4 : packedAlignment;
+		}
+
+		private static void PackMetadata(Stream target, HyoutaArchiveChunkInfo chunkInfo, byte packedAlignment, EndianUtils.Endianness endian, long fileStartPosition) {
+			// TODO: actually pack stuff here
+			byte smallPackedAlignment = ToSmallPackedAlignment(packedAlignment);
+			ulong length = 8; // length including the intial 8 byte length field, for data alignment
+			target.WriteUInt64(length.Align(1 << smallPackedAlignment) - 8, endian);
+			return;
 		}
 
 		private static ulong PackDataBlock(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignment, EndianUtils.Endianness endian) {
