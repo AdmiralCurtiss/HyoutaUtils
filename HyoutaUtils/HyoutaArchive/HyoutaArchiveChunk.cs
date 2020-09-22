@@ -225,24 +225,22 @@ namespace HyoutaUtils.HyoutaArchive {
 
 			ulong tableOfContentsOffsetInDataBlock;
 			if (isCompressed) {
+				byte smallPackedAlignment = ToSmallPackedAlignment(packedAlignment);
 				MemoryStream ms = new MemoryStream();
 				tableOfContentsOffsetInDataBlock = PackDataBlock(ms, files, packedAlignment, endian);
 				ms.Position = 0;
 				(byte[] compressionInfoBytes, byte[] compressedData) = HyoutaArchiveCompression.Compress(compressionInfo, ms, packedAlignment);
 
-				// TODO: respect alignment here
-				uint compressionInfoLength = ((uint)compressionInfoBytes.Length.Align(4));
+				uint compressionInfoLength = (uint)compressionInfoBytes.Length.Align(1 << smallPackedAlignment);
 				target.WriteUInt16((ushort)(compressionInfoLength == 0x10000 ? 0 : compressionInfoLength), endian);
 				target.Write(compressionInfoBytes);
-				for (int i = 0; i < (compressionInfoLength - compressionInfoBytes.Length); ++i) {
-					target.WriteByte(0);
-				}
+				target.WriteZeros(compressionInfoLength - compressionInfoBytes.Length);
+				long dataBlockStartPos = (target.Position - startPosition).Align(1 << packedAlignment);
+				target.WriteZeros(dataBlockStartPos - (target.Position - startPosition));
 				target.Write(compressedData);
 			} else {
-				long dataBlockStartPos = (target.Position - startPosition).Align(1 << packedAlignment) + startPosition;
-				while (target.Position < dataBlockStartPos) {
-					target.WriteByte(0);
-				}
+				long dataBlockStartPos = (target.Position - startPosition).Align(1 << packedAlignment);
+				target.WriteZeros(dataBlockStartPos - (target.Position - startPosition));
 				tableOfContentsOffsetInDataBlock = PackDataBlock(target, files, packedAlignment, endian);
 			}
 
@@ -254,24 +252,33 @@ namespace HyoutaUtils.HyoutaArchive {
 			target.Position = endPosition;
 		}
 
+		private static byte ToSmallPackedAlignment(byte packedAlignment) {
+			// reduce the alignment to 16 if it's larger than that
+			// this is used for the individual file info contents instead because otherwise a large alignment would waste a *ton* of bytes with no practical benefit
+			// (as far as I know, anyway; you usually align either to disk sector sizes for loading efficiency, or processor word size, and the latter should be the only relevant one if align *within* a data chunk)
+			return packedAlignment > 4 ? (byte)4 : packedAlignment;
+		}
+
 		private static ulong PackDataBlock(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignment, EndianUtils.Endianness endian) {
+			byte smallPackedAlignment = ToSmallPackedAlignment(packedAlignment);
+
 			long startPosition = target.Position;
 			target.WriteUInt16(0); // offsetToFirstFileInfo, fill in later
 
 			bool hasDummyContent = files.Any(x => x.DummyContent != null);
-			uint dummyContentLength = hasDummyContent ? ((uint)files.Max(x => x.DummyContent?.Length ?? 0)).Align(1 << packedAlignment) : 0;
+			uint dummyContentLength = hasDummyContent ? ((uint)files.Max(x => x.DummyContent?.Length ?? 0)).Align(1 << smallPackedAlignment) : 0;
 			bool hasFilename = files.Any(x => x.Filename != null);
-			uint filenameLength = hasFilename ? ((uint)files.Max(x => x.Filename != null ? EncodeString(x.Filename, endian).Length : 0)).Align(1 << packedAlignment) : 0;
+			uint filenameLength = hasFilename ? ((uint)files.Max(x => x.Filename != null ? EncodeString(x.Filename, endian).Length : 0)).Align(1 << smallPackedAlignment) : 0;
 			bool hasCompression = false; // TODO: implement this
 			uint compressionInfoLength = 0; // TODO: implement this
 			bool hasBpsPatch = false; // TODO: implement this
 			uint bpsPatchInfoLength = 0; // TODO: implement this
 			bool hasCrc32 = files.Any(x => x.crc32 != null);
-			uint crc32ContentLength = hasCrc32 ? 4u.Align(1 << packedAlignment) : 0u;
+			uint crc32ContentLength = hasCrc32 ? 4u.Align(1 << smallPackedAlignment) : 0u;
 			bool hasMd5 = files.Any(x => x.md5 != null);
-			uint md5ContentLength = hasMd5 ? 16u.Align(1 << packedAlignment) : 0u;
+			uint md5ContentLength = hasMd5 ? 16u.Align(1 << smallPackedAlignment) : 0u;
 			bool hasSha1 = files.Any(x => x.sha1 != null);
-			uint sha1ContentLength = hasSha1 ? 20u.Align(1 << packedAlignment) : 0u;
+			uint sha1ContentLength = hasSha1 ? 20u.Align(1 << smallPackedAlignment) : 0u;
 
 			ushort contentBitfield1 = 0;
 			contentBitfield1 |= (ushort)(hasDummyContent ? 0x0001u : 0);
@@ -305,8 +312,8 @@ namespace HyoutaUtils.HyoutaArchive {
 				WriteContentLength(sha1ContentLength, target, endian);
 			}
 
-			// TODO: respect alignment here
-			long offsetToFirstFileInfo = target.Position - startPosition;
+			long offsetToFirstFileInfo = (target.Position - startPosition).Align(1 << smallPackedAlignment);
+			StreamUtils.WriteZeros(target, offsetToFirstFileInfo - (target.Position - startPosition));
 			target.Position = startPosition;
 			WriteContentLength((uint)offsetToFirstFileInfo, target, endian);
 			target.Position = startPosition + offsetToFirstFileInfo;
