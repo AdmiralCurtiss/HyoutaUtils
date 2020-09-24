@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace HyoutaUtils.HyoutaArchive {
 	public class HyoutaArchiveCompressionInfo {
-		public HyoutaArchiveCompressionInfo(DuplicatableStream stream, long maxBytes) {
+		public HyoutaArchiveCompressionInfo(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian, byte packedAlignment) {
 			// TODO: implement a format for this
 			stream.DiscardBytes(maxBytes);
 		}
 
-		public byte[] Serialize(EndianUtils.Endianness endian) {
+		public byte[] Serialize(EndianUtils.Endianness endian, byte packedAlignment) {
 			throw new NotImplementedException();
 		}
 	}

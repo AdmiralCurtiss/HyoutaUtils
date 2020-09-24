@@ -54,8 +54,8 @@ namespace HyoutaUtils.HyoutaArchive {
 					uint compressionInfoLength = compressionInfoLengthRaw & 0xfffcu;
 					int compressionInfoAlignmentPacked = (compressionInfoLengthRaw & 0x3) + 1;
 					data.ReadAlign(1u << compressionInfoAlignmentPacked);
-					HyoutaArchiveCompressionInfo compressionInfo = new HyoutaArchiveCompressionInfo(data, compressionInfoLength == 0 ? 0x10000u : compressionInfoLength);
-					dataBlockStream = HyoutaArchiveDecompression.Decompress(compressionInfo, data);
+					HyoutaArchiveCompressionInfo compressionInfo = new HyoutaArchiveCompressionInfo(data, compressionInfoLength == 0 ? 0x10000u : compressionInfoLength, e, packedAlignment);
+					dataBlockStream = HyoutaArchiveCompression.Decompress(compressionInfo, data);
 				} else {
 					data.ReadAlign(unpackedAlignment);
 					dataBlockStream = new PartialStream(data, data.Position, (long)(endOfFileOffset - (ulong)data.Position));
@@ -130,10 +130,12 @@ namespace HyoutaUtils.HyoutaArchive {
 							fi.Filename = ReadString(dataBlockStream, filenameLength, e);
 						}
 						if (hasCompression) {
-							fi.Compression = new HyoutaArchiveCompressionInfo(dataBlockStream, compressionLength);
+							fi.CompressionInfo = new HyoutaArchiveCompressionInfo(dataBlockStream, compressionLength, e, packedAlignment);
+							fi.StreamIsCompressed = true;
 						}
 						if (hasBpsPatch) {
-							fi.BpsPatch = new HyoutaArchiveBpsPatchInfo(dataBlockStream, bpspatchLength);
+							fi.BpsPatchInfo = new HyoutaArchiveBpsPatchInfo(dataBlockStream, bpspatchLength, e, packedAlignment);
+							fi.StreamIsBpsPatch = true;
 						}
 						if (hasCrc32) {
 							if (crc32Length >= 4) {
@@ -241,7 +243,7 @@ namespace HyoutaUtils.HyoutaArchive {
 				MemoryStream ms = new MemoryStream();
 				tableOfContentsOffsetInDataBlock = PackDataBlock(ms, files, packedAlignment, endian);
 				ms.Position = 0;
-				(byte[] compressionInfoBytes, byte[] compressedData) = HyoutaArchiveCompression.Compress(compressionInfo, ms, packedAlignment);
+				(byte[] compressionInfoBytes, byte[] compressedData) = HyoutaArchiveCompression.Compress(compressionInfo, ms, endian, packedAlignment);
 
 				uint compressionInfoLength = (uint)compressionInfoBytes.Length.Align(1 << smallPackedAlignment);
 				target.WriteUInt16((ushort)(compressionInfoLength == 0x10000 ? 0 : compressionInfoLength), endian);
@@ -289,10 +291,10 @@ namespace HyoutaUtils.HyoutaArchive {
 			uint dummyContentLength = hasDummyContent ? ((uint)files.Max(x => x.DummyContent?.Length ?? 0)).Align(1 << smallPackedAlignment) : 0;
 			bool hasFilename = files.Any(x => x.Filename != null);
 			uint filenameLength = hasFilename ? ((uint)files.Max(x => x.Filename != null ? EncodeString(x.Filename, endian).Length : 0)).Align(1 << smallPackedAlignment) : 0;
-			bool hasCompression = false; // TODO: implement this
-			uint compressionInfoLength = 0; // TODO: implement this
-			bool hasBpsPatch = false; // TODO: implement this
-			uint bpsPatchInfoLength = 0; // TODO: implement this
+			bool hasCompression = files.Any(x => x.CompressionInfo != null);
+			uint compressionInfoLength = hasCompression ? 64u.Align(1 << smallPackedAlignment) : 0; // TODO: proper size for this!
+			bool hasBpsPatch = files.Any(x => x.BpsPatchInfo != null);
+			uint bpsPatchInfoLength = hasBpsPatch ? 64u.Align(1 << smallPackedAlignment) : 0; // TODO: proper size for this!
 			bool hasCrc32 = files.Any(x => x.crc32 != null);
 			uint crc32ContentLength = hasCrc32 ? 4u.Align(1 << smallPackedAlignment) : 0u;
 			bool hasMd5 = files.Any(x => x.md5 != null);
@@ -346,11 +348,43 @@ namespace HyoutaUtils.HyoutaArchive {
 			long offsetToNextFile = offsetToFirstFile;
 			for (int i = 0; i < files.Count; ++i) {
 				HyoutaArchiveFileInfo fi = files[i];
-				using (DuplicatableStream fs = fi.DataStream.Duplicate()) {
+				using (DuplicatableStream fs = fi.Data.Duplicate()) {
+					DuplicatableStream streamToWrite = fs;
+
+					bool streamIsInternallyCompressed = fi.StreamIsCompressed;
+					if (fi.BpsPatchInfo != null && fi.CompressionInfo != null && streamIsInternallyCompressed && !fi.StreamIsBpsPatch) {
+						// this is a weird case; the stream wants both bps patch and compression
+						// and is already compressed but not already bps patched, which breaks the defined order
+						// we can handle this by decompressing, creating patch, recompressing
+						streamToWrite = fi.DataStream.Duplicate(); // this decompresses the stream
+						streamIsInternallyCompressed = false; // and fake-set the stream as uncompressed for packing logic
+					}
+
+					byte[] bpsPatchInfoBytes = null;
+					byte[] compressionInfoBytes = null;
+					if (hasBpsPatch && fi.BpsPatchInfo != null) {
+						if (fi.StreamIsBpsPatch) {
+							bpsPatchInfoBytes = fi.BpsPatchInfo.Serialize(endian, packedAlignment);
+						} else {
+							var p = HyoutaArchiveBps.CreatePatch(fi.BpsPatchInfo, streamToWrite, endian, packedAlignment);
+							bpsPatchInfoBytes = p.patchInfo;
+							streamToWrite = new DuplicatableByteArrayStream(p.patchData);
+						}
+					}
+					if (hasCompression && fi.CompressionInfo != null) {
+						if (streamIsInternallyCompressed) {
+							compressionInfoBytes = fi.CompressionInfo.Serialize(endian, packedAlignment);
+						} else {
+							var p = HyoutaArchiveCompression.Compress(fi.CompressionInfo, streamToWrite, endian, packedAlignment);
+							compressionInfoBytes = p.compressionInfo;
+							streamToWrite = new DuplicatableByteArrayStream(p.compressedData);
+						}
+					}
+
 					// write file info
 					target.Position = (singleFileInfoLength * i) + offsetToFirstFileInfo + startPosition;
 					target.WriteUInt64(((ulong)offsetToNextFile) >> packedAlignment, endian);
-					target.WriteUInt64((ulong)fs.Length, endian);
+					target.WriteUInt64((ulong)streamToWrite.Length, endian);
 					if (hasDummyContent) {
 						if (fi.DummyContent != null) {
 							target.Write(fi.DummyContent);
@@ -369,10 +403,26 @@ namespace HyoutaUtils.HyoutaArchive {
 						}
 					}
 					if (hasCompression) {
-						// TODO
+						if (compressionInfoBytes != null) {
+							if (compressionInfoBytes.Length > compressionInfoLength) {
+								throw new Exception("compression info too long");
+							}
+							target.Write(compressionInfoBytes);
+							target.WriteZeros(compressionInfoLength - compressionInfoBytes.Length);
+						} else {
+							target.WriteZeros(compressionInfoLength);
+						}
 					}
 					if (hasBpsPatch) {
-						// TODO
+						if (bpsPatchInfoBytes != null) {
+							if (bpsPatchInfoBytes.Length > bpsPatchInfoLength) {
+								throw new Exception("bps info too long");
+							}
+							target.Write(bpsPatchInfoBytes);
+							target.WriteZeros(bpsPatchInfoLength - bpsPatchInfoBytes.Length);
+						} else {
+							target.WriteZeros(bpsPatchInfoLength);
+						}
 					}
 					if (hasCrc32) {
 						if (fi.crc32.HasValue) {
@@ -401,9 +451,9 @@ namespace HyoutaUtils.HyoutaArchive {
 
 					// write file and update next file offset
 					target.Position = offsetToNextFile + startPosition;
-					fs.Position = 0;
-					StreamUtils.CopyStream(fs, target);
-					long currentEnd = offsetToNextFile + fs.Length;
+					streamToWrite.Position = 0;
+					StreamUtils.CopyStream(streamToWrite, target);
+					long currentEnd = offsetToNextFile + streamToWrite.Length;
 					offsetToNextFile = (target.Position - startPosition).Align(1 << packedAlignment);
 					long filerest = offsetToNextFile - currentEnd;
 					target.WriteZeros(filerest);

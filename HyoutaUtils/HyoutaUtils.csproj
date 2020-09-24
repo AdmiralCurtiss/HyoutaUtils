@@ -53,12 +53,12 @@
     <Compile Include="EndianUtils.cs" />
     <Compile Include="ExternalProgramExecution.cs" />
     <Compile Include="HexUtils.cs" />
+    <Compile Include="HyoutaArchive\HyoutaArchiveBps.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveBpsPatchInfo.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveChunk.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveChunkInfo.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveCompression.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveCompressionInfo.cs" />
-    <Compile Include="HyoutaArchive\HyoutaArchiveDecompression.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveFile.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveFileInfo.cs" />
     <Compile Include="NumberUtils.cs" />
