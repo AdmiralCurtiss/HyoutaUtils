@@ -13,7 +13,15 @@ namespace HyoutaUtils.HyoutaArchive {
 		}
 
 		public static DuplicatableStream ApplyPatch(HyoutaArchiveBpsPatchInfo patchInfo, Stream data) {
-			throw new Exception("not yet implemented");
+			HyoutaArchiveFileInfo sourceFile = patchInfo.ReferencedChunk.GetFile((long)patchInfo.FileIndexToPatch);
+			using (DuplicatableStream sourceStream = sourceFile.DataStream.Duplicate()) {
+				sourceStream.Position = 0;
+				data.Position = 0;
+				using (MemoryStream ms = new MemoryStream()) {
+					Bps.BpsPatcher.ApplyPatchToStream(sourceStream, data, ms);
+					return ms.CopyToByteArrayStreamAndDispose();
+				}
+			}
 		}
 	}
 }

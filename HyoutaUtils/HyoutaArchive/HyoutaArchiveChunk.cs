@@ -134,8 +134,8 @@ namespace HyoutaUtils.HyoutaArchive {
 							fi.StreamIsCompressed = true;
 						}
 						if (hasBpsPatch) {
-							fi.BpsPatchInfo = new HyoutaArchiveBpsPatchInfo(dataBlockStream, bpspatchLength, e, packedAlignment);
-							fi.StreamIsBpsPatch = true;
+							fi.BpsPatchInfo = HyoutaArchiveBpsPatchInfo.Deserialize(dataBlockStream, bpspatchLength, e, i, this);
+							fi.StreamIsBpsPatch = fi.BpsPatchInfo != null;
 						}
 						if (hasCrc32) {
 							if (crc32Length >= 4) {
@@ -294,7 +294,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			bool hasCompression = files.Any(x => x.CompressionInfo != null);
 			uint compressionInfoLength = hasCompression ? 64u.Align(1 << smallPackedAlignment) : 0; // TODO: proper size for this!
 			bool hasBpsPatch = files.Any(x => x.BpsPatchInfo != null);
-			uint bpsPatchInfoLength = hasBpsPatch ? 64u.Align(1 << smallPackedAlignment) : 0; // TODO: proper size for this!
+			uint bpsPatchInfoLength = hasBpsPatch ? 8u.Align(1 << smallPackedAlignment) : 0;
 			bool hasCrc32 = files.Any(x => x.crc32 != null);
 			uint crc32ContentLength = hasCrc32 ? 4u.Align(1 << smallPackedAlignment) : 0u;
 			bool hasMd5 = files.Any(x => x.md5 != null);
@@ -362,9 +362,12 @@ namespace HyoutaUtils.HyoutaArchive {
 
 					byte[] bpsPatchInfoBytes = null;
 					byte[] compressionInfoBytes = null;
-					if (hasBpsPatch && fi.BpsPatchInfo != null) {
-						if (fi.StreamIsBpsPatch) {
-							bpsPatchInfoBytes = fi.BpsPatchInfo.Serialize(endian, packedAlignment);
+					if (hasBpsPatch) {
+						if (fi.BpsPatchInfo == null) {
+							// chunk has patches but this file is unpatched; we store this by pointing the file to itself
+							bpsPatchInfoBytes = new HyoutaArchiveBpsPatchInfo((ulong)i, null).Serialize(endian);
+						} else if (fi.StreamIsBpsPatch) {
+							bpsPatchInfoBytes = fi.BpsPatchInfo.Serialize(endian);
 						} else {
 							var p = HyoutaArchiveBps.CreatePatch(fi.BpsPatchInfo, streamToWrite, endian, packedAlignment);
 							bpsPatchInfoBytes = p.patchInfo;
