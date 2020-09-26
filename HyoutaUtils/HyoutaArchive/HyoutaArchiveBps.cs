@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HyoutaUtils.HyoutaArchive {
 	public static class HyoutaArchiveBps {
-		public static (byte[] patchInfo, byte[] patchData) CreatePatch(HyoutaArchiveBpsPatchInfo patchInfo, Stream data, EndianUtils.Endianness endian, byte packedAlignment) {
+		public static (byte[] patchInfo, byte[] patchData) CreatePatch(HyoutaArchiveBpsPatchInfo patchInfo, Stream data, EndianUtils.Endianness endian) {
 			throw new Exception("not yet implemented");
 		}
 
@@ -17,7 +17,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			using (DuplicatableStream sourceStream = sourceFile.DataStream.Duplicate()) {
 				sourceStream.Position = 0;
 				data.Position = 0;
-				using (MemoryStream ms = new MemoryStream()) {
+				using (MemoryStream ms = new MemoryStream((int)patchInfo.TargetFilesize)) {
 					Bps.BpsPatcher.ApplyPatchToStream(sourceStream, data, ms);
 					return ms.CopyToByteArrayStreamAndDispose();
 				}

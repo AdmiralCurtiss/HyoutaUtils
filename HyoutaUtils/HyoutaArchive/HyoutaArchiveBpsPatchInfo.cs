@@ -9,25 +9,28 @@ using System.Threading.Tasks;
 namespace HyoutaUtils.HyoutaArchive {
 	public class HyoutaArchiveBpsPatchInfo {
 		public ulong FileIndexToPatch;
+		public ulong TargetFilesize;
 		public HyoutaArchiveChunk ReferencedChunk;
 
-		public HyoutaArchiveBpsPatchInfo(ulong index, HyoutaArchiveChunk referencedChunk) {
+		public HyoutaArchiveBpsPatchInfo(ulong index, ulong targetFilesize, HyoutaArchiveChunk referencedChunk) {
 			FileIndexToPatch = index;
+			TargetFilesize = targetFilesize;
 			ReferencedChunk = referencedChunk;
 		}
 
 		public static HyoutaArchiveBpsPatchInfo Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian, ulong currentFileIndex, HyoutaArchiveChunk referencedChunk) {
-			if (maxBytes < 8) {
+			if (maxBytes < 16) {
 				stream.DiscardBytes(maxBytes);
 				return null;
 			} else {
 				ulong fileIndexToPatch = stream.ReadUInt64(endian);
-				stream.DiscardBytes(maxBytes - 8);
+				ulong targetFilesize = stream.ReadUInt64(endian);
+				stream.DiscardBytes(maxBytes - 16);
 				if (fileIndexToPatch == currentFileIndex) {
 					// this is how you set a file to be unpatched in an archive that has patches
 					return null;
 				} else {
-					return new HyoutaArchiveBpsPatchInfo(fileIndexToPatch, referencedChunk);
+					return new HyoutaArchiveBpsPatchInfo(fileIndexToPatch, targetFilesize, referencedChunk);
 				}
 			}
 		}
@@ -35,6 +38,7 @@ namespace HyoutaUtils.HyoutaArchive {
 		public byte[] Serialize(EndianUtils.Endianness endian) {
 			using (MemoryStream ms = new MemoryStream()) {
 				ms.WriteUInt64(FileIndexToPatch, endian);
+				ms.WriteUInt64(TargetFilesize, endian);
 				return ms.CopyToByteArrayAndDispose();
 			}
 		}
