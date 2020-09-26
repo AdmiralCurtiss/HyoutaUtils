@@ -55,5 +55,9 @@ namespace HyoutaUtils.HyoutaArchive.Compression {
 			stream.DiscardBytes(maxBytes - 8);
 			return new DeflateSharpCompressionInfo(uncompressedFilesize);
 		}
+
+		public uint MaximumCompressionInfoLength() {
+			return 16u; // identifier + uncompressed filesize
+		}
 	}
 }

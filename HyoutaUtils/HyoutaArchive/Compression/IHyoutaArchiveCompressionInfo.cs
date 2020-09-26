@@ -13,5 +13,7 @@ namespace HyoutaUtils.HyoutaArchive.Compression {
 		(byte[] compressionInfo, byte[] compressedData) Compress(Stream data, EndianUtils.Endianness endian);
 
 		DuplicatableStream Decompress(Stream data);
+
+		uint MaximumCompressionInfoLength();
 	}
 }

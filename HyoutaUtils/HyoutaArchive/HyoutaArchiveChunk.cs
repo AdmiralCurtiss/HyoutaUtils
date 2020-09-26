@@ -292,7 +292,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			bool hasFilename = files.Any(x => x.Filename != null);
 			uint filenameLength = hasFilename ? ((uint)files.Max(x => x.Filename != null ? EncodeString(x.Filename, endian).Length : 0)).Align(1 << smallPackedAlignment) : 0;
 			bool hasCompression = files.Any(x => x.CompressionInfo != null);
-			uint compressionInfoLength = hasCompression ? 64u.Align(1 << smallPackedAlignment) : 0; // TODO: proper size for this!
+			uint compressionInfoLength = hasCompression ? files.Max(x => x.CompressionInfo?.MaximumCompressionInfoLength() ?? 0).Align(1 << smallPackedAlignment) : 0;
 			bool hasBpsPatch = files.Any(x => x.BpsPatchInfo != null);
 			uint bpsPatchInfoLength = hasBpsPatch ? 16u.Align(1 << smallPackedAlignment) : 0;
 			bool hasCrc32 = files.Any(x => x.crc32 != null);
