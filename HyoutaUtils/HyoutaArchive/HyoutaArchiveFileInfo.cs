@@ -21,7 +21,7 @@ namespace HyoutaUtils.HyoutaArchive {
 		// within the on-disk container but has already been decompressed (or not yet compressed) in memory
 		// if packing with such a file info, we need to compress the data before writing it into the archive
 		// if StreamIsCompressed is true on packing we can assume the data was already compressed and can just write it as-is
-		public HyoutaArchiveCompressionInfo CompressionInfo;
+		public Compression.IHyoutaArchiveCompressionInfo CompressionInfo;
 		public bool StreamIsCompressed = false;
 
 		// just like CompressionInfo above
@@ -39,7 +39,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			get {
 				DuplicatableStream s = Data;
 				if (CompressionInfo != null && StreamIsCompressed) {
-					s = HyoutaArchiveCompression.Decompress(CompressionInfo, s.Duplicate());
+					s = CompressionInfo.Decompress(s.Duplicate());
 				}
 				if (BpsPatchInfo != null && StreamIsBpsPatch) {
 					s = HyoutaArchiveBps.ApplyPatch(BpsPatchInfo, s.Duplicate());
