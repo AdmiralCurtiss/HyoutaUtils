@@ -60,7 +60,7 @@
     <Compile Include="HyoutaArchive\HyoutaArchiveChunk.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveChunkInfo.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveCompression.cs" />
-    <Compile Include="HyoutaArchive\HyoutaArchiveFile.cs" />
+    <Compile Include="HyoutaArchive\HyoutaArchiveContainer.cs" />
     <Compile Include="HyoutaArchive\HyoutaArchiveFileInfo.cs" />
     <Compile Include="NumberUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

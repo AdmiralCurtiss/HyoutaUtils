@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace HyoutaUtils.HyoutaArchive {
-	public class HyoutaArchiveFile : IContainer {
+	public class HyoutaArchiveContainer : IContainer {
 		private List<HyoutaArchiveChunk> Chunks;
 		private long[] FileCountOffsets;
 
@@ -22,7 +22,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			}
 		}
 
-		public HyoutaArchiveFile(DuplicatableStream stream) {
+		public HyoutaArchiveContainer(DuplicatableStream stream) {
 			ulong totalChunkLengths;
 			var firstChunk = new HyoutaArchiveChunk(stream, out totalChunkLengths);
 
