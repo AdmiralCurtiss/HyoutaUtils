@@ -41,11 +41,19 @@ namespace HyoutaUtils.Checksum {
 		}
 
 		public bool Equals(CRC32 other) {
-			return Value == other.Value;
+			return this == other;
 		}
 
 		public override bool Equals(object obj) {
 			return obj is CRC32 && Equals((CRC32)obj);
+		}
+
+		public static bool operator ==(CRC32 lhs, CRC32 rhs) {
+			return lhs.Value == rhs.Value;
+		}
+
+		public static bool operator !=(CRC32 lhs, CRC32 rhs) {
+			return !(lhs == rhs);
 		}
 
 		public override int GetHashCode() {

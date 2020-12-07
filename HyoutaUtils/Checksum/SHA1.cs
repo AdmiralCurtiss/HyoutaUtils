@@ -107,11 +107,19 @@ namespace HyoutaUtils.Checksum {
 		}
 
 		public bool Equals(SHA1 other) {
-			return Part1 == other.Part1 && Part2 == other.Part2 && Part3 == other.Part3;
+			return this == other;
 		}
 
 		public override bool Equals(object obj) {
 			return obj is SHA1 && Equals((SHA1)obj);
+		}
+
+		public static bool operator ==(SHA1 lhs, SHA1 rhs) {
+			return lhs.Part1 == rhs.Part1 && lhs.Part2 == rhs.Part2 && lhs.Part3 == rhs.Part3;
+		}
+
+		public static bool operator !=(SHA1 lhs, SHA1 rhs) {
+			return !(lhs == rhs);
 		}
 
 		public override int GetHashCode() {

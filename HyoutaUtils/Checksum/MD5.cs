@@ -69,11 +69,19 @@ namespace HyoutaUtils.Checksum {
 		}
 
 		public bool Equals(MD5 other) {
-			return Half1 == other.Half1 && Half2 == other.Half2;
+			return this == other;
 		}
 
 		public override bool Equals(object obj) {
 			return obj is MD5 && Equals((MD5)obj);
+		}
+
+		public static bool operator ==(MD5 lhs, MD5 rhs) {
+			return lhs.Half1 == rhs.Half1 && lhs.Half2 == rhs.Half2;
+		}
+
+		public static bool operator !=(MD5 lhs, MD5 rhs) {
+			return !(lhs == rhs);
 		}
 
 		public override int GetHashCode() {
