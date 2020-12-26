@@ -28,6 +28,28 @@ namespace HyoutaUtils {
 			}
 		}
 
+		public static long ParseDecOrHexInt64(string s) {
+			s = s.Trim();
+
+			if (s.StartsWith("0x")) {
+				s = s.Substring(2);
+				return long.Parse(s, System.Globalization.NumberStyles.HexNumber);
+			} else {
+				return long.Parse(s);
+			}
+		}
+
+		public static ulong ParseDecOrHexUInt64(string s) {
+			s = s.Trim();
+
+			if (s.StartsWith("0x")) {
+				s = s.Substring(2);
+				return ulong.Parse(s, System.Globalization.NumberStyles.HexNumber);
+			} else {
+				return ulong.Parse(s);
+			}
+		}
+
 		public static byte[] HumanReadableHexStringToByteArray( string v ) {
 			byte[] output;
 			int mainloopstart;
