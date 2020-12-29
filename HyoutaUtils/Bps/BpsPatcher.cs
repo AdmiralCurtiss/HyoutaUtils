@@ -157,5 +157,11 @@ namespace HyoutaUtils.Bps {
 		public static void ApplyPatchToStream(Stream source, Stream patch, Stream target) {
 			new BpsPatcher(source, patch, target).ApplyPatchToStreamInternal();
 		}
+
+		public static MemoryStream ApplyPatchToStream(Stream source, Stream patch) {
+			MemoryStream ms = new MemoryStream();
+			ApplyPatchToStream(source, patch, ms);
+			return ms;
+		}
 	}
 }
