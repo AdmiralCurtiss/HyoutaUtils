@@ -70,6 +70,7 @@
     <Compile Include="Streams\DuplicatableFileStream.cs" />
     <Compile Include="Streams\ConstantStream.cs" />
     <Compile Include="Streams\EmptyStream.cs" />
+    <Compile Include="Streams\MemoryStream64.cs" />
     <Compile Include="Streams\PartialStream.cs" />
     <Compile Include="StreamUtils.cs" />
     <Compile Include="TextUtils.cs" />
