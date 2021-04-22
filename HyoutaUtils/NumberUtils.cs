@@ -32,16 +32,16 @@ namespace HyoutaUtils {
 			return f;
 		}
 
-		public static int Align(this int number, int alignment) {
-			return (int)Align((uint)number, (uint)alignment);
+		public static int Align(this int number, int alignment, long offset = 0) {
+			return (int)Align((uint)number, (uint)alignment, (ulong)offset);
 		}
 
-		public static uint Align(this uint number, int alignment) {
-			return Align(number, (uint)alignment);
+		public static uint Align(this uint number, int alignment, ulong offset = 0) {
+			return Align(number, (uint)alignment, offset);
 		}
 
-		public static uint Align(this uint number, uint alignment) {
-			uint diff = number % alignment;
+		public static uint Align(this uint number, uint alignment, ulong offset = 0) {
+			uint diff = (uint)((number - offset) % alignment);
 			if (diff == 0) {
 				return number;
 			} else {
@@ -49,16 +49,16 @@ namespace HyoutaUtils {
 			}
 		}
 
-		public static long Align(this long number, long alignment) {
-			return (long)Align((ulong)number, (ulong)alignment);
+		public static long Align(this long number, long alignment, long offset = 0) {
+			return (long)Align((ulong)number, (ulong)alignment, (ulong)offset);
 		}
 
-		public static ulong Align(this ulong number, long alignment) {
-			return Align(number, (ulong)alignment);
+		public static ulong Align(this ulong number, long alignment, ulong offset = 0) {
+			return Align(number, (ulong)alignment, offset);
 		}
 
-		public static ulong Align(this ulong number, ulong alignment) {
-			ulong diff = number % alignment;
+		public static ulong Align(this ulong number, ulong alignment, ulong offset = 0) {
+			ulong diff = (number - offset) % alignment;
 			if (diff == 0) {
 				return number;
 			} else {

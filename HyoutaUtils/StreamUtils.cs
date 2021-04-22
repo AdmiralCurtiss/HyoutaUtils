@@ -629,15 +629,15 @@ namespace HyoutaUtils {
 			throw new Exception("Writing int not implemented for bitness " + bits.ToString());
 		}
 
-		public static void ReadAlign( this Stream s, long alignment ) {
-			while ( s.Position % alignment != 0 ) {
-				s.DiscardBytes( 1 );
+		public static void ReadAlign(this Stream s, long alignment, long offset = 0) {
+			while ((s.Position - offset) % alignment != 0) {
+				s.DiscardBytes(1);
 			}
 		}
 
-		public static void WriteAlign( this Stream s, long alignment, byte paddingByte = 0 ) {
-			while ( s.Position % alignment != 0 ) {
-				s.WriteByte( paddingByte );
+		public static void WriteAlign(this Stream s, long alignment, byte paddingByte = 0, long offset = 0) {
+			while ((s.Position - offset) % alignment != 0) {
+				s.WriteByte(paddingByte);
 			}
 		}
 
