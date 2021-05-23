@@ -52,6 +52,7 @@
     <Compile Include="Checksum\SHA1.cs" />
     <Compile Include="EndianUtils.cs" />
     <Compile Include="ExternalProgramExecution.cs" />
+    <Compile Include="GenericRomMapper.cs" />
     <Compile Include="HexUtils.cs" />
     <Compile Include="HyoutaArchive\Compression\DeflateSharpCompressionInfo.cs" />
     <Compile Include="HyoutaArchive\Compression\IHyoutaArchiveCompressionInfo.cs" />
