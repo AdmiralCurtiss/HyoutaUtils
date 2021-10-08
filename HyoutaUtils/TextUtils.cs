@@ -15,7 +15,7 @@ namespace HyoutaUtils {
 		public static Encoding ShiftJISEncoding {
 			get {
 				if ( _ShiftJISEncoding == null ) {
-					_ShiftJISEncoding = Encoding.GetEncoding( 932 );
+					_ShiftJISEncoding = CodePagesEncodingProvider.Instance.GetEncoding(932);
 				}
 				return _ShiftJISEncoding;
 			}
