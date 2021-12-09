@@ -32,7 +32,7 @@ namespace HyoutaUtils.HyoutaArchive {
 				}
 				byte extra = (byte)((extraMagic >> 56) & 0xffu);
 				byte packedAlignment = (byte)(extra & 0x1fu);
-				long unpackedAlignment = 1l << packedAlignment;
+				long unpackedAlignment = 1L << packedAlignment;
 				bool hasMetadata = (extra & 0x20) != 0;
 				bool isCompressed = (extra & 0x40) != 0;
 				bool isBigEndian = (extra & 0x80) != 0;
@@ -345,7 +345,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			uint dummyContentLength = hasDummyContent ? ((uint)files.Max(x => x.DummyContent?.Length ?? 0)).Align(1 << smallPackedAlignment) : 0;
 			bool hasFilename = files.Any(x => x.Filename != null);
 			uint filenameLength = 0;
-			bool embedFilenamesInFileInfo = false;
+			//bool embedFilenamesInFileInfo = false;
 			List<byte[]> encodedFilenames = null;
 			if (hasFilename) {
 				// figure out whether we want the strings to embed into the fileinfo directly
@@ -379,10 +379,10 @@ namespace HyoutaUtils.HyoutaArchive {
 
 				// pick whatever results in a smaller file; on a tie embed
 				if (nonEmbedSize < embedSize) {
-					embedFilenamesInFileInfo = false;
+					//embedFilenamesInFileInfo = false;
 					filenameLength = 16;
 				} else {
-					embedFilenamesInFileInfo = true;
+					//embedFilenamesInFileInfo = true;
 					filenameLength = (uint)(8 + longestBytecount).Align(1 << smallPackedAlignment);
 				}
 			}
