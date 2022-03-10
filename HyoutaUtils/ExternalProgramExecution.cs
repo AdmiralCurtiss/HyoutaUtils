@@ -19,7 +19,7 @@ namespace HyoutaUtils {
 	public class ExternalProgramExecution {
 		public static string EscapeArgument( string arg ) {
 			// TODO: this isn't enough
-			if ( arg.IndexOfAny( new char[] { '"', ' ', '\t', '\\' } ) == -1 ) {
+			if ( arg.IndexOfAny( new char[] { '"', ' ', '\t', '\\' } ) != -1 ) {
 				return "\"" + arg.Replace( "\\", "\\\\" ).Replace( "\"", "\\\"" ) + "\"";
 			} else {
 				return arg;
