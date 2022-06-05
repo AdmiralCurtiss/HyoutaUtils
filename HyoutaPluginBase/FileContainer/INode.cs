@@ -16,10 +16,10 @@ namespace HyoutaPluginBase.FileContainer {
 
 		// this node as a file if this is a file
 		// null if this is a container
-		IFile AsFile { get; }
+		IFile? AsFile { get; }
 
 		// this node as a container if this is a container
 		// null if this is a file
-		IContainer AsContainer { get; }
+		IContainer? AsContainer { get; }
 	}
 }

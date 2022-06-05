@@ -10,15 +10,15 @@ namespace HyoutaUtils.HyoutaArchive {
 	public class HyoutaArchiveBpsPatchInfo {
 		public ulong FileIndexToPatch;
 		public ulong TargetFilesize;
-		public HyoutaArchiveChunk ReferencedChunk;
+		public HyoutaArchiveChunk? ReferencedChunk;
 
-		public HyoutaArchiveBpsPatchInfo(ulong index, ulong targetFilesize, HyoutaArchiveChunk referencedChunk) {
+		public HyoutaArchiveBpsPatchInfo(ulong index, ulong targetFilesize, HyoutaArchiveChunk? referencedChunk) {
 			FileIndexToPatch = index;
 			TargetFilesize = targetFilesize;
 			ReferencedChunk = referencedChunk;
 		}
 
-		public static HyoutaArchiveBpsPatchInfo Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian, ulong currentFileIndex, HyoutaArchiveChunk referencedChunk) {
+		public static HyoutaArchiveBpsPatchInfo? Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian, ulong currentFileIndex, HyoutaArchiveChunk referencedChunk) {
 			if (maxBytes < 16) {
 				stream.DiscardBytes(maxBytes);
 				return null;

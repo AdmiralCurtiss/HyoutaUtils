@@ -72,7 +72,7 @@ namespace HyoutaUtils.Checksum {
 			return this == other;
 		}
 
-		public override bool Equals(object obj) {
+		public override bool Equals(object? obj) {
 			return obj is MD5 && Equals((MD5)obj);
 		}
 

@@ -44,7 +44,7 @@ namespace HyoutaUtils.HyoutaArchive.Compression {
 			}
 		}
 
-		public static DeflateSharpCompressionInfo Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian) {
+		public static DeflateSharpCompressionInfo? Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian) {
 			// note: identifier has already been read
 			if (maxBytes < 8) {
 				stream.DiscardBytes(maxBytes);

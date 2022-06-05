@@ -512,7 +512,7 @@ namespace HyoutaUtils {
 		}
 
 		public static DuplicatableStream ReadDuplicatableSubstream(this Stream stream, long bytecount) {
-			DuplicatableStream ds = stream as DuplicatableStream;
+			DuplicatableStream? ds = stream as DuplicatableStream;
 			if (ds != null) {
 				long p = ds.Position;
 				PartialStream ps = new PartialStream(ds, p, bytecount);
@@ -541,7 +541,7 @@ namespace HyoutaUtils {
 
 		public static DuplicatableStream ReadDuplicatableSubstreamFromLocationAndReset(this Stream stream, long position, long bytecount) {
 			long p = stream.Position;
-			DuplicatableStream ds = stream as DuplicatableStream;
+			DuplicatableStream? ds = stream as DuplicatableStream;
 			if (ds != null) {
 				return new PartialStream(ds, p, bytecount);
 			} else {

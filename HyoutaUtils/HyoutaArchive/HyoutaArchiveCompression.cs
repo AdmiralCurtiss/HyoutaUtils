@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HyoutaUtils.HyoutaArchive {
 	public static class HyoutaArchiveCompression {
-		public static Compression.IHyoutaArchiveCompressionInfo Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian) {
+		public static Compression.IHyoutaArchiveCompressionInfo? Deserialize(DuplicatableStream stream, long maxBytes, EndianUtils.Endianness endian) {
 			if (maxBytes < 8) {
 				stream.DiscardBytes(maxBytes);
 				return null;

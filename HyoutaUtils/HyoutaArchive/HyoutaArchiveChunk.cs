@@ -17,7 +17,7 @@ namespace HyoutaUtils.HyoutaArchive {
 
 		public bool IsFile => false;
 		public bool IsContainer => true;
-		public IFile AsFile => null;
+		public IFile? AsFile => null;
 		public IContainer AsContainer => this;
 
 		public HyoutaArchiveChunk(DuplicatableStream duplicatableStream, out ulong chunkLength) {
@@ -54,7 +54,10 @@ namespace HyoutaUtils.HyoutaArchive {
 					uint compressionInfoLength = compressionInfoLengthRaw & 0xfffcu;
 					int compressionInfoAlignmentPacked = (compressionInfoLengthRaw & 0x3) + 1;
 					data.ReadAlign(1u << compressionInfoAlignmentPacked);
-					Compression.IHyoutaArchiveCompressionInfo compressionInfo = HyoutaArchiveCompression.Deserialize(data, compressionInfoLength == 0 ? 0x10000u : compressionInfoLength, e);
+					Compression.IHyoutaArchiveCompressionInfo? compressionInfo = HyoutaArchiveCompression.Deserialize(data, compressionInfoLength == 0 ? 0x10000u : compressionInfoLength, e);
+					if (compressionInfo == null) {
+						throw new Exception("File is indicated to be compressed, but no decompressor found.");
+					}
 					dataBlockStream = compressionInfo.Decompress(data);
 				} else {
 					data.ReadAlign(unpackedAlignment);
@@ -191,7 +194,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			stream.WriteUInt16((ushort)(value == 0x10000 ? 0 : value), e);
 		}
 
-		private static string ReadString(DuplicatableStream s, uint maxBytes, EndianUtils.Endianness e) {
+		private static string? ReadString(DuplicatableStream s, uint maxBytes, EndianUtils.Endianness e) {
 			if (maxBytes < 8) {
 				// can't be a valid string
 				s.DiscardBytes(maxBytes);
@@ -275,7 +278,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			return Encoding.UTF8.GetBytes(value);
 		}
 
-		public static void Pack(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignmentRaw, EndianUtils.Endianness endian, HyoutaArchiveChunkInfo chunkInfo, Compression.IHyoutaArchiveCompressionInfo compressionInfo) {
+		public static void Pack(Stream target, List<HyoutaArchiveFileInfo> files, byte packedAlignmentRaw, EndianUtils.Endianness endian, HyoutaArchiveChunkInfo? chunkInfo, Compression.IHyoutaArchiveCompressionInfo? compressionInfo) {
 			long startPosition = target.Position;
 
 			bool hasMetadata = chunkInfo != null;
@@ -287,12 +290,12 @@ namespace HyoutaUtils.HyoutaArchive {
 			target.WriteUInt64(0); // aligned table of contents offset in data block, fill in later
 			target.WriteUInt64((ulong)files.Count, endian);
 
-			if (hasMetadata) {
+			if (chunkInfo != null) {
 				PackMetadata(target, chunkInfo, packedAlignment, endian, startPosition);
 			}
 
 			ulong tableOfContentsOffsetInDataBlock;
-			if (isCompressed) {
+			if (compressionInfo != null) {
 				byte smallPackedAlignment = ToSmallPackedAlignment(packedAlignment);
 				MemoryStream ms = new MemoryStream();
 				tableOfContentsOffsetInDataBlock = PackDataBlock(ms, files, packedAlignment, endian);
@@ -346,21 +349,22 @@ namespace HyoutaUtils.HyoutaArchive {
 			bool hasFilename = files.Any(x => x.Filename != null);
 			uint filenameLength = 0;
 			//bool embedFilenamesInFileInfo = false;
-			List<byte[]> encodedFilenames = null;
+			List<byte[]?>? encodedFilenames = null;
 			if (hasFilename) {
 				// figure out whether we want the strings to embed into the fileinfo directly
 				// or whether to use an offset and write the string data at the end of the fileinfo
 				// note that if a string is <= 8 bytes we can always embed it as we'd need 8 bytes for the offset anyway
 				// so...
-				encodedFilenames = new List<byte[]>(files.Count);
+				encodedFilenames = new List<byte[]?>(files.Count);
 				long longestBytecount = 0;
 				long totalBytecount = 0;
 				long filenameCountOver8Bytes = 0;
 				for (int i = 0; i < files.Count; ++i) {
-					if (files[i].Filename == null) {
+					var currentFilename = files[i].Filename;
+					if (currentFilename == null) {
 						encodedFilenames.Add(null);
 					} else {
-						byte[] stringbytes = EncodeString(files[i].Filename);
+						byte[] stringbytes = EncodeString(currentFilename);
 						encodedFilenames.Add(stringbytes);
 
 						if (stringbytes.LongLength > 8) {
@@ -445,7 +449,11 @@ namespace HyoutaUtils.HyoutaArchive {
 			long positionOfFreeSpace = offsetToEndOfFileInfo;
 			for (int i = 0; i < files.Count; ++i) {
 				HyoutaArchiveFileInfo fi = files[i];
-				using (DuplicatableStream fs = fi.Data.Duplicate()) {
+				var fiData = fi.Data;
+				if (fiData == null) {
+					throw new Exception("Data of file " + i + " is null.");
+				}
+				using (DuplicatableStream fs = fiData.Duplicate()) {
 					DuplicatableStream streamToWrite = fs;
 
 					bool streamIsInternallyCompressed = fi.StreamIsCompressed;
@@ -457,8 +465,8 @@ namespace HyoutaUtils.HyoutaArchive {
 						streamIsInternallyCompressed = false; // and fake-set the stream as uncompressed for packing logic
 					}
 
-					byte[] bpsPatchInfoBytes = null;
-					byte[] compressionInfoBytes = null;
+					byte[]? bpsPatchInfoBytes = null;
+					byte[]? compressionInfoBytes = null;
 					if (hasBpsPatch) {
 						if (fi.BpsPatchInfo == null) {
 							// chunk has patches but this file is unpatched; we store this by pointing the file to itself
@@ -496,7 +504,8 @@ namespace HyoutaUtils.HyoutaArchive {
 					}
 					if (hasFilename) {
 						if (fi.Filename != null) {
-							WriteString(target, encodedFilenames[i], filenameLength, endian, startPosition, ref positionOfFreeSpace);
+							var efn = encodedFilenames![i];
+							WriteString(target, efn!, filenameLength, endian, startPosition, ref positionOfFreeSpace);
 						} else {
 							target.WriteZeros(filenameLength);
 						}
@@ -586,7 +595,7 @@ namespace HyoutaUtils.HyoutaArchive {
 			return GetFile(index);
 		}
 
-		public INode GetChildByName(string name) {
+		public INode? GetChildByName(string name) {
 			for (int i = 0; i < Files.Count; ++i) {
 				if (Files[i].Filename == name) {
 					return GetChildByIndex(i);
@@ -597,8 +606,9 @@ namespace HyoutaUtils.HyoutaArchive {
 
 		public IEnumerable<string> GetChildNames() {
 			for (int i = 0; i < Files.Count; ++i) {
-				if (Files[i].Filename != null) {
-					yield return Files[i].Filename;
+				var f = Files[i].Filename;
+				if (f != null) {
+					yield return f;
 				}
 			}
 		}
@@ -608,8 +618,9 @@ namespace HyoutaUtils.HyoutaArchive {
 			if (!disposedValue) {
 				if (disposing) {
 					for (int i = 0; i < Files.Count; ++i) {
-						if (Files[i].Data != null) {
-							Files[i].Data.Dispose();
+						var d = Files[i].Data;
+						if (d != null) {
+							d.Dispose();
 						}
 					}
 				}

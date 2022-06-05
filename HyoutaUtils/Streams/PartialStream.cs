@@ -29,7 +29,7 @@ namespace HyoutaUtils.Streams {
 
 			if ( stream is PartialStream ) {
 				// optimization to better chain partial stream of partial stream
-				PartialStream parent = stream as PartialStream;
+				PartialStream parent = (PartialStream)stream;
 				BaseStreamInternal = parent.BaseStreamInternal.Duplicate();
 				Initialized = false;
 				PartialStart = parent.PartialStart + position;

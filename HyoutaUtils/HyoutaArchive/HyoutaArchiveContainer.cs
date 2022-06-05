@@ -44,10 +44,10 @@ namespace HyoutaUtils.HyoutaArchive {
 
 		public bool IsFile => false;
 		public bool IsContainer => true;
-		public IFile AsFile => null;
+		public IFile? AsFile => null;
 		public IContainer AsContainer => this;
 
-		public HyoutaArchiveFileInfo GetFile(long index) {
+		public HyoutaArchiveFileInfo? GetFile(long index) {
 			// is this right???
 			for (int i = 1; i < FileCountOffsets.Length; ++i) {
 				if (index < FileCountOffsets[i]) {
@@ -57,13 +57,13 @@ namespace HyoutaUtils.HyoutaArchive {
 			return null;
 		}
 
-		public INode GetChildByIndex(long index) {
+		public INode? GetChildByIndex(long index) {
 			return GetFile(index);
 		}
 
-		public INode GetChildByName(string name) {
+		public INode? GetChildByName(string name) {
 			foreach (HyoutaArchiveChunk chunk in Chunks) {
-				INode child = chunk.GetChildByName(name);
+				INode? child = chunk.GetChildByName(name);
 				if (child != null) {
 					return child;
 				}

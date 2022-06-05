@@ -13,7 +13,13 @@ namespace HyoutaUtils.HyoutaArchive {
 		}
 
 		public static DuplicatableStream ApplyPatch(HyoutaArchiveBpsPatchInfo patchInfo, Stream data) {
-			HyoutaArchiveFileInfo sourceFile = patchInfo.ReferencedChunk.GetFile((long)patchInfo.FileIndexToPatch);
+			var refchunk = patchInfo.ReferencedChunk;
+			if (refchunk == null) {
+				// implies that the file points at itself and is unpatched
+				return data.CopyToByteArrayStream();
+			}
+
+			HyoutaArchiveFileInfo sourceFile = refchunk.GetFile((long)patchInfo.FileIndexToPatch);
 			using (DuplicatableStream sourceStream = sourceFile.DataStream.Duplicate()) {
 				sourceStream.Position = 0;
 				data.Position = 0;

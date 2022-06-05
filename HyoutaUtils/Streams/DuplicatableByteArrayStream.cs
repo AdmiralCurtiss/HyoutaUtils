@@ -89,7 +89,7 @@ namespace HyoutaUtils.Streams {
 		}
 
 		protected override void Dispose( bool disposing ) {
-			Data = null;
+			//Data = null;
 		}
 
 		public override string ToString() {

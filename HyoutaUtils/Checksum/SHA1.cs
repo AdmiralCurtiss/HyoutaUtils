@@ -110,7 +110,7 @@ namespace HyoutaUtils.Checksum {
 			return this == other;
 		}
 
-		public override bool Equals(object obj) {
+		public override bool Equals(object? obj) {
 			return obj is SHA1 && Equals((SHA1)obj);
 		}
 

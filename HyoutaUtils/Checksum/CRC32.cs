@@ -44,7 +44,7 @@ namespace HyoutaUtils.Checksum {
 			return this == other;
 		}
 
-		public override bool Equals(object obj) {
+		public override bool Equals(object? obj) {
 			return obj is CRC32 && Equals((CRC32)obj);
 		}
 

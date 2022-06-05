@@ -11,6 +11,15 @@ namespace HyoutaUtils {
 		public string[] Arguments;
 		public string StdOut;
 		public string StdErr;
+
+		public ExternalProgramReturnNonzeroException(int returnValue, string program, string[] arguments, string stdOut, string stdErr) {
+			ReturnValue = returnValue;
+			Program = program;
+			Arguments = arguments;
+			StdOut = stdOut;
+			StdErr = stdErr;
+		}
+
 		public override string ToString() {
 			return Program + " returned " + ReturnValue + ": " + ( StdErr.Trim() != "" ? StdErr : StdOut );
 		}
@@ -27,10 +36,10 @@ namespace HyoutaUtils {
 		}
 
 		public struct RunProgramReturnValue { public string StdOut; public string StdErr; }
-		public static async Task<RunProgramReturnValue> RunProgram( string prog, string[] args, System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null, System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null ) {
+		public static async Task<RunProgramReturnValue> RunProgram(string prog, string[] args, System.Diagnostics.DataReceivedEventHandler[]? stdoutCallbacks = null, System.Diagnostics.DataReceivedEventHandler[]? stderrCallbacks = null) {
 			return await Task.Run( () => RunProgramSynchronous( prog, args, stdoutCallbacks, stderrCallbacks ) );
 		}
-		public static RunProgramReturnValue RunProgramSynchronous( string prog, string[] args, System.Diagnostics.DataReceivedEventHandler[] stdoutCallbacks = null, System.Diagnostics.DataReceivedEventHandler[] stderrCallbacks = null ) {
+		public static RunProgramReturnValue RunProgramSynchronous(string prog, string[] args, System.Diagnostics.DataReceivedEventHandler[]? stdoutCallbacks = null, System.Diagnostics.DataReceivedEventHandler[]? stderrCallbacks = null) {
 			System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
 			startInfo.CreateNoWindow = true;
 			startInfo.UseShellExecute = false;
@@ -82,7 +91,13 @@ namespace HyoutaUtils {
 				string err = errorData.ToString();
 
 				if ( exeProcess.ExitCode != 0 ) {
-					throw new ExternalProgramReturnNonzeroException() { ReturnValue = exeProcess.ExitCode, Program = prog, Arguments = args, StdOut = output, StdErr = err };
+					throw new ExternalProgramReturnNonzeroException(
+						returnValue: exeProcess.ExitCode,
+						program: prog,
+						arguments: args,
+						stdOut: output,
+						stdErr: err
+					);
 				}
 
 				return new RunProgramReturnValue() { StdOut = output, StdErr = err };

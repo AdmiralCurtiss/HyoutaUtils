@@ -4,7 +4,7 @@ using HyoutaPluginBase;
 
 namespace HyoutaUtils.Streams {
 	public class DuplicatableFileStream : DuplicatableStream {
-		private FileStream BaseStreamInternal;
+		private FileStream? BaseStreamInternal;
 		private string Path;
 		private FileMode Mode;
 		private FileAccess Access;

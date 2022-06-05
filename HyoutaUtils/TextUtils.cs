@@ -11,17 +11,20 @@ namespace HyoutaUtils {
 			UTF16,
 		}
 
-		private static Encoding _ShiftJISEncoding = null;
+		private static Encoding? _ShiftJISEncoding = null;
 		public static Encoding ShiftJISEncoding {
 			get {
-				if ( _ShiftJISEncoding == null ) {
+				if (_ShiftJISEncoding == null) {
 					_ShiftJISEncoding = CodePagesEncodingProvider.Instance.GetEncoding(932);
+					if (_ShiftJISEncoding == null) {
+						throw new Exception("Failed to initialize Shift-JIS encoding.");
+					}
 				}
 				return _ShiftJISEncoding;
 			}
 		}
 
-		public static string GetTextShiftJis( byte[] file, int location ) {
+		public static string? GetTextShiftJis( byte[] file, int location ) {
 			if ( location == -1 ) return null;
 
 			try {
@@ -36,7 +39,7 @@ namespace HyoutaUtils {
 			}
 		}
 
-		public static string GetTextAscii( byte[] file, int location ) {
+		public static string? GetTextAscii( byte[] file, int location ) {
 			if ( location == -1 ) return null;
 
 			try {
@@ -61,12 +64,12 @@ namespace HyoutaUtils {
 			return sb.ToString();
 		}
 
-		public static string GetTextUTF8( byte[] file, int location ) {
+		public static string? GetTextUTF8( byte[] file, int location ) {
 			int tmp;
 			return GetTextUTF8( file, location, out tmp );
 		}
 
-		public static string GetTextUTF8( byte[] file, int location, out int nullLocation ) {
+		public static string? GetTextUTF8( byte[] file, int location, out int nullLocation ) {
 			if ( location == -1 ) { nullLocation = -1; return null; }
 
 			try {
