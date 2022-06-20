@@ -122,6 +122,18 @@ namespace HyoutaUtils.Checksum {
 			return !(lhs == rhs);
 		}
 
+		public static int CompareSha256(SHA256 lhs, SHA256 rhs) {
+			if (lhs.Part1 < rhs.Part1) { return -1; }
+			if (lhs.Part1 > rhs.Part1) { return 1; }
+			if (lhs.Part2 < rhs.Part2) { return -1; }
+			if (lhs.Part2 > rhs.Part2) { return 1; }
+			if (lhs.Part3 < rhs.Part3) { return -1; }
+			if (lhs.Part3 > rhs.Part3) { return 1; }
+			if (lhs.Part4 < rhs.Part4) { return -1; }
+			if (lhs.Part4 > rhs.Part4) { return 1; }
+			return 0;
+		}
+
 		public override int GetHashCode() {
 			return (int)(Part4 & 0xFFFFFFFF);
 		}
