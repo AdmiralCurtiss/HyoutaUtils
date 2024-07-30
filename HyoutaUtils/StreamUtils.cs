@@ -543,7 +543,7 @@ namespace HyoutaUtils {
 			long p = stream.Position;
 			DuplicatableStream? ds = stream as DuplicatableStream;
 			if (ds != null) {
-				return new PartialStream(ds, p, bytecount);
+				return new PartialStream(ds, position, bytecount);
 			} else {
 				stream.Position = position;
 				DuplicatableStream nds = new DuplicatableByteArrayStream(ReadBytes(stream, bytecount));
