@@ -230,7 +230,7 @@ public class BmpSerializer {
                 stream.ReadUInt32(); // clrImportant
             }
 
-            if (numberOfColors == 0 && bpp < 8) {
+            if (numberOfColors == 0 && bpp <= 8) {
                 numberOfColors = (1u << (int)bpp);
             }
 
