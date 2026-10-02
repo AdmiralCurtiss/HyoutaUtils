@@ -157,7 +157,7 @@ public class BmpSerializer {
         }
     }
 
-    public static Bitmap Read(Stream stream) {
+    public static Bitmap Read(Stream stream, out uint[]? palette) {
         long startPos = stream.Position;
 
         ushort magic = stream.ReadUInt16();
@@ -346,7 +346,7 @@ public class BmpSerializer {
 
         uint pixelBytesPerRow = (((bpp * width) + 31u) / 32u) * 4u;
         uint pixelBytesPerRowPadded = pixelBytesPerRow.Align(4);
-        uint[]? palette = null;
+        palette = null;
         if (paletted) {
             if (bytesPerColorInPalette == 3) {
                 palette = new uint[numberOfColors];

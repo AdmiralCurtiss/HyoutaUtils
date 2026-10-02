@@ -23,7 +23,8 @@ public class Bitmap {
 
     public static Bitmap ReadFromFile(string path) {
         using (var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-            return BmpSerializer.Read(file);
+            uint[]? palette;
+            return BmpSerializer.Read(file, out palette);
         }
     }
 
