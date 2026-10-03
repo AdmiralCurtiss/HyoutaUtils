@@ -439,7 +439,7 @@ public class BmpSerializer {
     public static void Write(Stream stream, Bitmap bitmap) {
         uint width = (uint)bitmap.Width;
         uint height = (uint)bitmap.Height;
-        bool hasAlpha = false;
+        bool hasAlpha = BitmapUtils.HasAlpha(bitmap);
         uint headerSize = 40;
         uint offsetPixelArray = headerSize + 14u + (hasAlpha ? 16u : 0u);
         ushort bpp = hasAlpha ? (ushort)32u : (ushort)24u;

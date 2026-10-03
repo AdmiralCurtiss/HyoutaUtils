@@ -486,8 +486,7 @@ public class PngSerializer {
         // very basic: always truecolor 8bpp, no filter, no interlace
         uint width = (uint)bitmap.Width;
         uint height = (uint)bitmap.Height;
-        bool hasAlpha = true;
-
+        bool hasAlpha = BitmapUtils.HasAlpha(bitmap);
         stream.WriteUInt64(0x0a1a0a0d474e5089);
 
         // IHDR
