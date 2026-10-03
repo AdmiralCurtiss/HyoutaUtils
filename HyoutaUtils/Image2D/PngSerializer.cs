@@ -387,7 +387,12 @@ public class PngSerializer {
                             }
                             break;
                         case 16:
-                            throw new NotImplementedException();
+                            for (uint x = 0; x < width; ++x) {
+                                int c = scanline[x * 4u];
+                                int a = scanline[x * 4u + 2u];
+                                bmp.SetPixel((int)x, (int)y, Color.FromArgb(a, c, c, c));
+                            }
+                            break;
                         default:
                             throw new InvalidDataException("PNG: Invalid bit depth");
                     }
@@ -423,7 +428,11 @@ public class PngSerializer {
                             }
                             break;
                         case 16:
-                            throw new NotImplementedException();
+                            for (uint x = 0; x < width; ++x) {
+                                int c = scanline[x * 2u];
+                                bmp.SetPixel((int)x, (int)y, Color.FromArgb(255, c, c, c));
+                            }
+                            break;
                         default:
                             throw new InvalidDataException("PNG: Invalid bit depth");
                     }
@@ -449,7 +458,23 @@ public class PngSerializer {
                         }
                         break;
                     case 16:
-                        throw new NotImplementedException();
+                        if (hasAlpha) {
+                            for (uint x = 0; x < width; ++x) {
+                                int r = scanline[x * 8u];
+                                int g = scanline[x * 8u + 2u];
+                                int b = scanline[x * 8u + 4u];
+                                int a = scanline[x * 8u + 6u];
+                                bmp.SetPixel((int)x, (int)y, Color.FromArgb(a, r, g, b));
+                            }
+                        } else {
+                            for (uint x = 0; x < width; ++x) {
+                                int r = scanline[x * 6u];
+                                int g = scanline[x * 6u + 2u];
+                                int b = scanline[x * 6u + 4u];
+                                bmp.SetPixel((int)x, (int)y, Color.FromArgb(255, r, g, b));
+                            }
+                        }
+                        break;
                     default:
                         throw new InvalidDataException("PNG: Invalid bit depth");
                 }
