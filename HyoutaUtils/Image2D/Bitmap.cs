@@ -23,8 +23,15 @@ public class Bitmap {
 
     public static Bitmap ReadFromFile(string path) {
         using (var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-            uint[]? palette;
-            return BmpSerializer.Read(file, out palette);
+            if (file.PeekUInt64() == 0x0a1a0a0d474e5089) {
+                uint[]? palette;
+                return PngSerializer.Read(file, out palette);
+            }
+            if (file.PeekUInt16() == 0x4d42) {
+                uint[]? palette;
+                return BmpSerializer.Read(file, out palette);
+            }
+            throw new NotImplementedException("Unknown file type");
         }
     }
 

@@ -1,0 +1,3 @@
+[submodule "zlib-sharp"]
+	path = zlib-sharp
+	url = https://github.com/AdmiralCurtiss/zlib-sharp.git

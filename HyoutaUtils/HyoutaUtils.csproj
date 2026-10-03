@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HyoutaPluginBase\HyoutaPluginBase.csproj" />
+    <ProjectReference Include="..\zlib-sharp\zlib-sharp\zlib-sharp.csproj" />
   </ItemGroup>
 </Project>

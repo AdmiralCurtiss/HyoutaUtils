@@ -1,0 +1,290 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using HyoutaUtils.Checksum;
+using zlib_sharp;
+
+namespace HyoutaUtils.Image2D;
+
+public class PngSerializer {
+    struct ChunkInfo {
+        public uint Length;
+        public uint Type;
+        public long Offset;
+
+        public ChunkInfo(uint length, uint type, long offset) {
+            Length = length;
+            Type = type;
+            Offset = offset;
+        }
+    }
+
+    public static Bitmap Read(Stream stream, out uint[]? palette) {
+        ulong magic = stream.ReadUInt64();
+        if (magic != 0x0a1a0a0d474e5089) {
+            throw new InvalidDataException("Invalid magic bytes for PNG");
+        }
+
+        ChunkInfo? ihdrChunk = null;
+        ChunkInfo? plteChunk = null;
+        List<ChunkInfo> idatChunks = new List<ChunkInfo>();
+        List<ChunkInfo> otherChunks = new List<ChunkInfo>();
+        while (stream.Position < stream.Length) {
+            uint length = stream.ReadUInt32(EndianUtils.Endianness.BigEndian);
+            uint type = stream.PeekUInt32(EndianUtils.Endianness.BigEndian);
+            long offset = stream.Position + 4;
+            CRC32 actualChecksum = stream.CalculateCRC32FromCurrentPosition((long)length + 4);
+            CRC32 expectedChecksum = new CRC32(stream.ReadUInt32(EndianUtils.Endianness.BigEndian));
+            if (actualChecksum != expectedChecksum) {
+                throw new InvalidDataException("Checksum error for PNG chunk");
+            }
+            if (type == 0x49454E44) { // IEND
+                break;
+            }
+            if (type == 0x49484452) { // IHDR
+                if (ihdrChunk != null) {
+                    throw new InvalidDataException("PNG: Multiple IHDR chunks");
+                }
+                if (length != 13) {
+                    throw new InvalidDataException("PNG: Invalid IHDR chunk size");
+                }
+                ihdrChunk = new ChunkInfo(length, type, offset);
+                continue;
+            }
+            if (type == 0x504C5445) { // PLTE
+                if (plteChunk != null) {
+                    throw new InvalidDataException("PNG: Multiple PLTE chunks");
+                }
+                if ((length % 3) != 0) {
+                    throw new InvalidDataException("PNG: Invalid PLTE chunk size");
+                }
+                plteChunk = new ChunkInfo(length, type, offset);
+                continue;
+            }
+            if (type == 0x49444154) { // IDAT
+                idatChunks.Add(new ChunkInfo(length, type, offset));
+            } else {
+                otherChunks.Add(new ChunkInfo(length, type, offset));
+            }
+        }
+
+        // read IHDR
+        if (!ihdrChunk.HasValue) {
+            throw new InvalidDataException("PNG: No IHDR chunk");
+        }
+        stream.Position = ihdrChunk.Value.Offset;
+        uint width = stream.ReadUInt32(EndianUtils.Endianness.BigEndian);
+        uint height = stream.ReadUInt32(EndianUtils.Endianness.BigEndian);
+        if (width == 0 || height == 0) {
+            throw new InvalidDataException("PNG: Invalid image dimensions");
+        }
+        byte bitDepth = stream.ReadUInt8();
+        byte colorType = stream.ReadUInt8();
+        byte compressionMethod = stream.ReadUInt8();
+        byte filterMethod = stream.ReadUInt8();
+        byte interlaceMethod = stream.ReadUInt8();
+        bool paletted = false;
+        bool grayscale = false;
+        bool hasAlpha = false;
+        switch (colorType) {
+            case 0:
+                if (!(bitDepth == 1 || bitDepth == 2 || bitDepth == 4 || bitDepth == 8 || bitDepth == 16)) {
+                    throw new InvalidDataException("PNG: Invalid bit depth");
+                }
+                grayscale = true;
+                break;
+            case 2:
+                if (!(bitDepth == 8 || bitDepth == 16)) {
+                    throw new InvalidDataException("PNG: Invalid bit depth");
+                }
+                break;
+            case 3:
+                if (!(bitDepth == 1 || bitDepth == 2 || bitDepth == 4 || bitDepth == 8)) {
+                    throw new InvalidDataException("PNG: Invalid bit depth");
+                }
+                paletted = true;
+                break;
+            case 4:
+                if (!(bitDepth == 8 || bitDepth == 16)) {
+                    throw new InvalidDataException("PNG: Invalid bit depth");
+                }
+                grayscale = true;
+                hasAlpha = true;
+                break;
+            case 6:
+                if (!(bitDepth == 8 || bitDepth == 16)) {
+                    throw new InvalidDataException("PNG: Invalid bit depth");
+                }
+                hasAlpha = true;
+                break;
+            default:
+                throw new InvalidDataException("PNG: Invalid color type");
+        }
+        if (compressionMethod != 0) {
+            throw new InvalidDataException("PNG: Invalid compression method");
+        }
+        if (filterMethod != 0) {
+            throw new InvalidDataException("PNG: Invalid filter method");
+        }
+        if (!(interlaceMethod == 0 || interlaceMethod == 1)) {
+            throw new InvalidDataException("PNG: Invalid filter method");
+        }
+
+        palette = null;
+        if (paletted) {
+            if (plteChunk == null) {
+                throw new InvalidDataException("PNG: No PLTE chunk for paletted image");
+            }
+            stream.Position = plteChunk.Value.Offset;
+            uint maxAllowedColors = (1u << bitDepth);
+            uint numPaletteEntries = plteChunk.Value.Length / 3;
+            if (numPaletteEntries > maxAllowedColors) {
+                throw new InvalidDataException("PNG: Too many colors in palette");
+            }
+            palette = new uint[numPaletteEntries];
+            for (uint i = 0; i < numPaletteEntries; ++i) {
+                int r = stream.ReadByte();
+                int g = stream.ReadByte();
+                int b = stream.ReadByte();
+                palette[i] = Color.FromArgb(255, r, g, b).ColorRGBA;
+            }
+        }
+        if (interlaceMethod == 1) {
+            throw new NotImplementedException();
+        }
+
+        // decompress IDAT
+        MemoryStream decompressedIDAT = new MemoryStream();
+        {
+            uint CHUNK = 0x4000;
+            int ret;
+            zlib_sharp.z_stream strm = new zlib_sharp.z_stream();
+            strm.input_buffer = new byte[CHUNK];
+            strm.output_buffer = new byte[CHUNK];
+            strm.avail_in = 0;
+            strm.next_in = 0;
+            ret = zlib_sharp.zlib.inflateInit(strm);
+            if (ret != zlib_sharp.zlib.Z_OK) {
+                throw new Exception("zlib inflateInit() failed");
+            }
+
+            foreach (ChunkInfo chunk in idatChunks) {
+                stream.Position = chunk.Offset;
+                long rest = chunk.Length;
+                while (rest > 0) {
+                    int bytesRead = stream.Read(strm.input_buffer, 0, (int)Math.Min(rest, CHUNK));
+                    if (bytesRead <= 0) {
+                        break;
+                    }
+                    strm.avail_in = (uint)bytesRead;
+                    strm.next_in = 0;
+
+                    do {
+                        strm.avail_out = CHUNK;
+                        strm.next_out = 0;
+                        ret = zlib_sharp.zlib.inflate(strm, zlib_sharp.zlib.Z_NO_FLUSH);
+                        if (ret == zlib_sharp.zlib.Z_STREAM_ERROR
+                            || ret == zlib_sharp.zlib.Z_NEED_DICT
+                            || ret == zlib_sharp.zlib.Z_DATA_ERROR
+                            || ret == zlib_sharp.zlib.Z_MEM_ERROR) {
+                            throw new Exception("zlib inflate() failed");
+                        }
+                        uint have = CHUNK - strm.avail_out;
+                        decompressedIDAT.Write(strm.output_buffer, 0, (int)have);
+                    } while (strm.avail_out == 0);
+
+                    rest -= bytesRead;
+                }
+            }
+
+            zlib_sharp.zlib.inflateEnd(strm);
+        }
+
+        decompressedIDAT.Position = 0;
+        Bitmap bmp = DecodePngIdat(decompressedIDAT, width, height, bitDepth, grayscale, palette, hasAlpha);
+        return bmp;
+    }
+
+    private static Bitmap DecodePngIdat(Stream idat, uint width, uint height,
+        byte bitDepth, bool grayscale, uint[]? palette, bool hasAlpha) {
+        uint bitsPerSample = bitDepth;
+        if (!(palette != null || grayscale)) {
+            bitsPerSample *= 3; // RGB for each sample
+        }
+        if (palette == null && hasAlpha) {
+            bitsPerSample += bitDepth;
+        }
+        int bytesPerScanline = (int)(((bitsPerSample + 7u) / 8u) * width);
+        byte[] lastScanline = new byte[bytesPerScanline];
+        byte[] thisScanline = new byte[bytesPerScanline];
+        Bitmap bmp = new Bitmap((int)width, (int)height);
+        for (uint y = 0; y < height; ++y) {
+            int filterType = idat.ReadByte();
+            if (idat.Read(thisScanline, 0, bytesPerScanline) != bytesPerScanline) {
+                throw new InvalidDataException("PNG: Failed to read scanline");
+            }
+            switch (filterType) {
+                case 0: { // None
+                    DecodeScanline(bmp, thisScanline, width, y, bitDepth, grayscale, palette, hasAlpha);
+                    break;
+                }
+                case 1: { // Sub
+                    throw new NotImplementedException();
+                }
+                case 2: { // Up
+                    throw new NotImplementedException();
+                }
+                case 3: { // Average
+                    throw new NotImplementedException();
+                }
+                case 4: { // Paeth
+                    throw new NotImplementedException();
+                }
+                default:
+                    throw new InvalidDataException("PNG: Invalid filter type for scanline");
+            }
+
+            // swap buffers for next scanline
+            byte[] tmp = thisScanline;
+            thisScanline = lastScanline;
+            lastScanline = tmp;
+        }
+        return bmp;
+    }
+
+    private static void DecodeScanline(Bitmap bmp, byte[] scanline, uint width, uint y,
+        byte bitDepth, bool grayscale, uint[]? palette, bool hasAlpha) {
+        if (palette != null) {
+            throw new NotImplementedException();
+        } else {
+            if (grayscale) {
+                throw new NotImplementedException();
+            } else {
+                switch (bitDepth) {
+                    case 8:
+                        if (hasAlpha) {
+                            for (uint x = 0; x < width; ++x) {
+                                int r = scanline[x * 4u];
+                                int g = scanline[x * 4u + 1u];
+                                int b = scanline[x * 4u + 2u];
+                                int a = scanline[x * 4u + 3u];
+                                bmp.SetPixel((int)x, (int)y, Color.FromArgb(a, r, g, b));
+                            }
+                        } else {
+                            for (uint x = 0; x < width; ++x) {
+                                int r = scanline[x * 3u];
+                                int g = scanline[x * 3u + 1u];
+                                int b = scanline[x * 3u + 2u];
+                                bmp.SetPixel((int)x, (int)y, Color.FromArgb(255, r, g, b));
+                            }
+                        }
+                        break;
+                    case 16:
+                        throw new NotImplementedException();
+                    default:
+                        throw new InvalidDataException("PNG: Invalid bit depth");
+                }
+            }
+        }
+    }
+}
