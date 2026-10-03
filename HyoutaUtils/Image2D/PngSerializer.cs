@@ -214,6 +214,7 @@ public class PngSerializer {
         if (palette == null && hasAlpha) {
             bitsPerSample += bitDepth;
         }
+        uint bytesPerCompletePixel = ((bitsPerSample + 7u) / 8u);
         int bytesPerScanline = (int)((((bitsPerSample * width) + 7u) / 8u));
         byte[] lastScanline = new byte[bytesPerScanline];
         byte[] thisScanline = new byte[bytesPerScanline];
@@ -229,16 +230,43 @@ public class PngSerializer {
                     break;
                 }
                 case 1: { // Sub
-                    throw new NotImplementedException();
+                    for (uint x = bytesPerCompletePixel; x < bytesPerScanline; ++x) {
+                        uint self = thisScanline[x];
+                        uint left = thisScanline[x - bytesPerCompletePixel];
+                        thisScanline[x] = (byte)((self + left) & 255u);
+                    }
+                    DecodeScanline(bmp, thisScanline, width, y, bitDepth, grayscale, palette, hasAlpha);
+                    break;
                 }
                 case 2: { // Up
-                    throw new NotImplementedException();
+                    for (uint x = 0; x < bytesPerScanline; ++x) {
+                        uint self = thisScanline[x];
+                        uint up = lastScanline[x];
+                        thisScanline[x] = (byte)((self + up) & 255u);
+                    }
+                    DecodeScanline(bmp, thisScanline, width, y, bitDepth, grayscale, palette, hasAlpha);
+                    break;
                 }
                 case 3: { // Average
-                    throw new NotImplementedException();
+                    for (uint x = 0; x < bytesPerScanline; ++x) {
+                        uint self = thisScanline[x];
+                        uint left = x >= bytesPerCompletePixel ? thisScanline[x - bytesPerCompletePixel] : 0u;
+                        uint up = lastScanline[x];
+                        thisScanline[x] = (byte)((self + ((left + up) / 2u)) & 255u);
+                    }
+                    DecodeScanline(bmp, thisScanline, width, y, bitDepth, grayscale, palette, hasAlpha);
+                    break;
                 }
                 case 4: { // Paeth
-                    throw new NotImplementedException();
+                    for (uint x = 0; x < bytesPerScanline; ++x) {
+                        int self = thisScanline[x];
+                        int left = x >= bytesPerCompletePixel ? thisScanline[x - bytesPerCompletePixel] : 0;
+                        int up = lastScanline[x];
+                        int upLeft = x >= bytesPerCompletePixel ? lastScanline[x - bytesPerCompletePixel] : 0;
+                        thisScanline[x] = (byte)((self + PaethPredictor(left, up, upLeft)) & 255);
+                    }
+                    DecodeScanline(bmp, thisScanline, width, y, bitDepth, grayscale, palette, hasAlpha);
+                    break;
                 }
                 default:
                     throw new InvalidDataException("PNG: Invalid filter type for scanline");
@@ -250,6 +278,23 @@ public class PngSerializer {
             lastScanline = tmp;
         }
         return bmp;
+    }
+
+    private static int PaethPredictor(int a, int b, int c) {
+        // a = left, b = above, c = upper left
+        int p = a + b - c; // initial estimate
+        int pa = Math.Abs(p - a); // distances to a, b, c
+        int pb = Math.Abs(p - b);
+        int pc = Math.Abs(p - c);
+        // return nearest of a,b,c,
+        // breaking ties in order a,b,c.
+        if (pa <= pb && pa <= pc) {
+            return a;
+        } else if (pb <= pc) {
+            return b;
+        } else {
+            return c;
+        }
     }
 
     private static void DecodeScanline(Bitmap bmp, byte[] scanline, uint width, uint y,
