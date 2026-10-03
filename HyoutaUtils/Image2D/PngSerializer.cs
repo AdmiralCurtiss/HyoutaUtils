@@ -287,4 +287,76 @@ public class PngSerializer {
             }
         }
     }
+
+    public static void Write(Stream stream, Bitmap bitmap) {
+        // very basic: always truecolor 8bpp, no filter, no interlace
+        uint width = (uint)bitmap.Width;
+        uint height = (uint)bitmap.Height;
+        bool hasAlpha = true;
+
+        stream.WriteUInt64(0x0a1a0a0d474e5089);
+
+        // IHDR
+        MemoryStream chunkData = new MemoryStream();
+        chunkData.WriteUInt32(0x49484452, EndianUtils.Endianness.BigEndian);
+        chunkData.WriteUInt32(width, EndianUtils.Endianness.BigEndian);
+        chunkData.WriteUInt32(height, EndianUtils.Endianness.BigEndian);
+        chunkData.WriteUInt8(8); // bit depth
+        chunkData.WriteUInt8((byte)(hasAlpha ? 6 : 2)); // color type
+        chunkData.WriteUInt8(0); // compression method
+        chunkData.WriteUInt8(0); // filter method
+        chunkData.WriteUInt8(0); // interlace method
+        WriteChunk(stream, chunkData);
+
+        // IDAT
+        chunkData.SetLength(0);
+        chunkData.WriteUInt32(0x49444154, EndianUtils.Endianness.BigEndian);
+        {
+            uint bytesPerScanline = (width * (hasAlpha ? 4u : 3u)) + 1u;
+            byte[] buffer = new byte[bytesPerScanline * height];
+            long p = 0;
+            for (uint y = 0; y < height; ++y) {
+                buffer[p] = 0;
+                ++p;
+                for (uint x = 0; x < width; ++x) {
+                    Color c = bitmap.GetPixel((int)x, (int)y);
+                    buffer[p] = (byte)c.R;
+                    ++p;
+                    buffer[p] = (byte)c.G;
+                    ++p;
+                    buffer[p] = (byte)c.B;
+                    ++p;
+                    if (hasAlpha) {
+                        buffer[p] = (byte)c.A;
+                        ++p;
+                    }
+                }
+            }
+
+            ulong insize = (ulong)buffer.Length;
+            ulong bound = zlib.compressBound(insize);
+            byte[] compressedData = new byte[bound];
+            ulong size = bound;
+            int result = zlib.compress2(compressedData, 0, ref size, buffer, 0, insize, zlib.Z_DEFAULT_COMPRESSION);
+            if (result != zlib.Z_OK) {
+                throw new Exception("PNG: zlib compression error");
+            }
+            chunkData.Write(compressedData, 0, (int)size);
+        }
+        WriteChunk(stream, chunkData);
+
+        // IEND
+        chunkData.SetLength(0);
+        chunkData.WriteUInt32(0x49454E44, EndianUtils.Endianness.BigEndian);
+        WriteChunk(stream, chunkData);
+    }
+
+    private static void WriteChunk(Stream stream, Stream chunk) {
+        chunk.Position = 0;
+        CRC32 crc = chunk.CalculateCRC32FromCurrentPosition(chunk.Length);
+        chunk.Position = 0;
+        stream.WriteUInt32((uint)(chunk.Length - 4), EndianUtils.Endianness.BigEndian);
+        chunk.CopyTo(stream);
+        stream.WriteUInt32(crc.Value, EndianUtils.Endianness.BigEndian);
+    }
 }

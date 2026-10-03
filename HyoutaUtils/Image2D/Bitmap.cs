@@ -230,6 +230,8 @@ public class Bitmap {
     public void Save(string path) {
         if (path.EndsWith(".bmp", StringComparison.InvariantCultureIgnoreCase)) {
             Save(path, ImageFormat.Bmp);
+        } else if (path.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase)) {
+            Save(path, ImageFormat.Png);
         } else {
             throw new NotImplementedException();
         }
@@ -244,6 +246,7 @@ public class Bitmap {
     public void Save(Stream stream, ImageFormat format) {
         switch (format) {
             case ImageFormat.Bmp: BmpSerializer.Write(stream, this); break;
+            case ImageFormat.Png: PngSerializer.Write(stream, this); break;
             default: throw new NotImplementedException();
         }
     }
