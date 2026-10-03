@@ -127,7 +127,7 @@ public class PngSerializer {
             throw new InvalidDataException("PNG: Invalid filter method");
         }
         if (!(interlaceMethod == 0 || interlaceMethod == 1)) {
-            throw new InvalidDataException("PNG: Invalid filter method");
+            throw new InvalidDataException("PNG: Invalid interlace method");
         }
 
         palette = null;
@@ -148,9 +148,6 @@ public class PngSerializer {
                 int b = stream.ReadByte();
                 palette[i] = Color.FromArgb(255, r, g, b).ColorRGBA;
             }
-        }
-        if (interlaceMethod == 1) {
-            throw new NotImplementedException();
         }
 
         // decompress IDAT
@@ -201,7 +198,57 @@ public class PngSerializer {
         }
 
         decompressedIDAT.Position = 0;
-        Bitmap bmp = DecodePngIdat(decompressedIDAT, width, height, bitDepth, grayscale, palette, hasAlpha);
+
+        Bitmap bmp;
+        if (interlaceMethod == 1) {
+            Bitmap pass1 = DecodePngIdat(decompressedIDAT, (width + 7u) / 8u, (height + 7u) / 8u, bitDepth, grayscale, palette, hasAlpha);
+            Bitmap pass2 = DecodePngIdat(decompressedIDAT, (width + 3u) / 8u, (height + 7u) / 8u, bitDepth, grayscale, palette, hasAlpha);
+            Bitmap pass3 = DecodePngIdat(decompressedIDAT, (width + 3u) / 4u, (height + 3u) / 8u, bitDepth, grayscale, palette, hasAlpha);
+            Bitmap pass4 = DecodePngIdat(decompressedIDAT, (width + 1u) / 4u, (height + 3u) / 4u, bitDepth, grayscale, palette, hasAlpha);
+            Bitmap pass5 = DecodePngIdat(decompressedIDAT, (width + 1u) / 2u, (height + 1u) / 4u, bitDepth, grayscale, palette, hasAlpha);
+            Bitmap pass6 = DecodePngIdat(decompressedIDAT, width / 2u, (height + 1u) / 2u, bitDepth, grayscale, palette, hasAlpha);
+            Bitmap pass7 = DecodePngIdat(decompressedIDAT, width, height / 2u, bitDepth, grayscale, palette, hasAlpha);
+
+            // combine interlace passes into one image
+            bmp = new Bitmap((int)width, (int)height);
+            for (int y = 0; y < pass1.Height; ++y) {
+                for (int x = 0; x < pass1.Width; ++x) {
+                    bmp.SetPixel(x * 8, y * 8, pass1.GetPixel(x, y));
+                }
+            }
+            for (int y = 0; y < pass2.Height; ++y) {
+                for (int x = 0; x < pass2.Width; ++x) {
+                    bmp.SetPixel(x * 8 + 4, y * 8, pass2.GetPixel(x, y));
+                }
+            }
+            for (int y = 0; y < pass3.Height; ++y) {
+                for (int x = 0; x < pass3.Width; ++x) {
+                    bmp.SetPixel(x * 4, y * 8 + 4, pass3.GetPixel(x, y));
+                }
+            }
+            for (int y = 0; y < pass4.Height; ++y) {
+                for (int x = 0; x < pass4.Width; ++x) {
+                    bmp.SetPixel(x * 4 + 2, y * 4, pass4.GetPixel(x, y));
+                }
+            }
+            for (int y = 0; y < pass5.Height; ++y) {
+                for (int x = 0; x < pass5.Width; ++x) {
+                    bmp.SetPixel(x * 2, y * 4 + 2, pass5.GetPixel(x, y));
+                }
+            }
+            for (int y = 0; y < pass6.Height; ++y) {
+                for (int x = 0; x < pass6.Width; ++x) {
+                    bmp.SetPixel(x * 2 + 1, y * 2, pass6.GetPixel(x, y));
+                }
+            }
+            for (int y = 0; y < pass7.Height; ++y) {
+                for (int x = 0; x < pass7.Width; ++x) {
+                    bmp.SetPixel(x, y * 2 + 1, pass7.GetPixel(x, y));
+                }
+            }
+        } else {
+            bmp = DecodePngIdat(decompressedIDAT, width, height, bitDepth, grayscale, palette, hasAlpha);
+        }
         return bmp;
     }
 
