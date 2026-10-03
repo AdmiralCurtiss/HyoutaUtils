@@ -344,7 +344,7 @@ public class BmpSerializer {
             hasAlpha
         );
 
-        uint pixelBytesPerRow = (((bpp * width) + 31u) / 32u) * 4u;
+        uint pixelBytesPerRow = ((bpp * width) + 7u) / 8u;
         uint pixelBytesPerRowPadded = pixelBytesPerRow.Align(4);
         palette = null;
         if (paletted) {
@@ -443,7 +443,7 @@ public class BmpSerializer {
         uint headerSize = 40;
         uint offsetPixelArray = headerSize + 14u + (hasAlpha ? 16u : 0u);
         ushort bpp = hasAlpha ? (ushort)32u : (ushort)24u;
-        uint pixelBytesPerRow = (((bpp * width) + 31u) / 32u) * 4u;
+        uint pixelBytesPerRow = ((bpp * width) + 7u) / 8u;
         uint pixelBytesPerRowPadded = pixelBytesPerRow.Align(4);
         uint padding = pixelBytesPerRowPadded - pixelBytesPerRow;
         uint pixelBytesTotal = pixelBytesPerRowPadded * height;
