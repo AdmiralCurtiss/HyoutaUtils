@@ -300,7 +300,34 @@ public class PngSerializer {
     private static void DecodeScanline(Bitmap bmp, byte[] scanline, uint width, uint y,
         byte bitDepth, bool grayscale, uint[]? palette, bool hasAlpha) {
         if (palette != null) {
-            throw new NotImplementedException();
+            switch (bitDepth) {
+                case 1:
+                    for (uint x = 0; x < width; ++x) {
+                        int c = (scanline[x / 8u] & (1u << (int)((7u - x) % 8u))) != 0 ? 1 : 0;
+                        bmp.SetPixel((int)x, (int)y, new Color(palette[c]));
+                    }
+                    break;
+                case 2:
+                    for (uint x = 0; x < width; ++x) {
+                        uint c = ((scanline[x / 4u] & (3u << (int)(((3u - x) % 4u) * 2u))) >> (int)(((3u - x) % 4u) * 2u));
+                        bmp.SetPixel((int)x, (int)y, new Color(palette[c]));
+                    }
+                    break;
+                case 4:
+                    for (uint x = 0; x < width; ++x) {
+                        uint c = ((scanline[x / 2u] & (15u << (int)(((1u - x) % 2u) * 4u))) >> (int)(((1u - x) % 2u) * 4u));
+                        bmp.SetPixel((int)x, (int)y, new Color(palette[c]));
+                    }
+                    break;
+                case 8:
+                    for (uint x = 0; x < width; ++x) {
+                        int c = scanline[x];
+                        bmp.SetPixel((int)x, (int)y, new Color(palette[c]));
+                    }
+                    break;
+                default:
+                    throw new InvalidDataException("PNG: Invalid bit depth");
+            }
         } else {
             if (grayscale) {
                 if (hasAlpha) {
