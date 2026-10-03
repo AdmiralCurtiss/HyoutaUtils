@@ -42,6 +42,58 @@ public class Bitmap {
         return new Color(this.Data[y * Width + x]);
     }
 
+    private Color GetInterpolatedPixel(double x, double y) {
+        int leftX = Math.Clamp((int)Math.Round(x, MidpointRounding.ToNegativeInfinity), 0, Width - 1);
+        int rightX = Math.Clamp((int)Math.Round(x, MidpointRounding.ToPositiveInfinity), 0, Width - 1);
+        int topY = Math.Clamp((int)Math.Round(y, MidpointRounding.ToNegativeInfinity), 0, Height - 1);
+        int bottomY = Math.Clamp((int)Math.Round(y, MidpointRounding.ToPositiveInfinity), 0, Height - 1);
+        Color pixelTL = GetPixel(leftX, topY);
+        Color pixelTR = GetPixel(rightX, topY);
+        Color pixelBL = GetPixel(leftX, bottomY);
+        Color pixelBR = GetPixel(rightX, bottomY);
+        double distanceLeft = (x - leftX);
+        double distanceTop = (y - topY);
+        double weightTL = (1.0 - distanceLeft) * (1.0 - distanceTop);
+        double weightTR = distanceLeft * (1.0 - distanceTop);
+        double weightBL = (1.0 - distanceLeft) * distanceTop;
+        double weightBR = distanceLeft * distanceTop;
+        double r = weightTL * pixelTL.R + weightTR * pixelTR.R + weightBL * pixelBL.R + weightBR * pixelBR.R;
+        double g = weightTL * pixelTL.G + weightTR * pixelTR.G + weightBL * pixelBL.G + weightBR * pixelBR.G;
+        double b = weightTL * pixelTL.B + weightTR * pixelTR.B + weightBL * pixelBL.B + weightBR * pixelBR.B;
+        double a = weightTL * pixelTL.A + weightTR * pixelTR.A + weightBL * pixelBL.A + weightBR * pixelBR.A;
+        int cr = Math.Clamp((int)Math.Round(r, MidpointRounding.ToEven), 0, 255);
+        int cg = Math.Clamp((int)Math.Round(g, MidpointRounding.ToEven), 0, 255);
+        int cb = Math.Clamp((int)Math.Round(b, MidpointRounding.ToEven), 0, 255);
+        int ca = Math.Clamp((int)Math.Round(a, MidpointRounding.ToEven), 0, 255);
+        return Color.FromArgb(ca, cr, cg, cb);
+    }
+
+    public void Scale(int newWidth, int newHeight) {
+        if (newWidth <= 0 || newHeight <= 0) {
+            throw new ArgumentOutOfRangeException();
+        }
+
+        double oldMaxXFloat = Width - 1;
+        double oldMaxYFloat = Height - 1;
+        double newMaxXFloat = newWidth - 1;
+        double newMaxYFloat = newHeight - 1;
+        double ratioWidth = (oldMaxXFloat / newMaxXFloat);
+        double ratioHeight = (oldMaxYFloat / newMaxYFloat);
+
+        uint[] dst = new uint[newWidth * newHeight];
+        for (int newY = 0; newY < newHeight; ++newY) {
+            for (int newX = 0; newX < newWidth; ++newX) {
+                double oldX = Math.Clamp(newX * ratioWidth, 0.0, oldMaxXFloat);
+                double oldY = Math.Clamp(newY * ratioHeight, 0.0, oldMaxYFloat);
+                dst[newY * newWidth + newX] = GetInterpolatedPixel(oldX, oldY).ColorRGBA;
+            }
+        }
+
+        Width = newWidth;
+        Height = newHeight;
+        Data = dst;
+    }
+
     public void RotateFlip(RotateFlipType type) {
         int w = Width;
         int h = Height;
